@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Get started')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav(true)}"></nav>
+<main class="auth-wrap"><div class="container" style="position:relative;max-width:1000px">
+  <div class="text-center mb-4">
+    <h1>Welcome to <span class="grad-text">Eventora!</span></h1>
+    <p class="text-white-50">Choose how you want to continue.</p>
+  </div>
+  <div th:replace="~{fragments :: flash}"></div>
+  <div class="row g-4">
+    <div class="col-md-4"><a th:href="@{/login/customer}" class="text-decoration-none text-white"><div class="glass p-4 h-100 ev-card text-center">
+      <div class="step"><div class="ico mx-auto"><i class="bi bi-person-heart"></i></div></div>
+      <h4>Customer</h4><p class="text-white-50">Discover events, book tickets and pay. Just your email - we send a one-time code.</p>
+      <span class="btn btn-eventora">Continue with email</span></div></a></div>
+    <div class="col-md-4"><a th:href="@{/login/organizer}" class="text-decoration-none text-white"><div class="glass p-4 h-100 ev-card text-center">
+      <div class="step"><div class="ico mx-auto" style="background:var(--grad2)"><i class="bi bi-calendar2-event"></i></div></div>
+      <h4>Organizer</h4><p class="text-white-50">Create events, manage customers, payments, tickets and feedback. Email + password.</p>
+      <span class="btn btn-cyan">Organizer sign in</span></div></a></div>
+    <div class="col-md-4"><a th:href="@{/login/manager}" class="text-decoration-none text-white"><div class="glass p-4 h-100 ev-card text-center">
+      <div class="step"><div class="ico mx-auto" style="background:linear-gradient(135deg,#f97316,#ec4899)"><i class="bi bi-shield-check"></i></div></div>
+      <h4>Event Manager</h4><p class="text-white-50">Verify organizers, approve events and oversee all platform activity. Email + password.</p>
+      <span class="btn btn-glass">Manager sign in</span></div></a></div>
+  </div>
+</div></main>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

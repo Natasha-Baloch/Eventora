@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Event')}"></head>
+<body>
+<nav th:replace="~{fragments :: dashnav}"></nav>
+<div class="dash"><div class="container" style="max-width:960px">
+  <a th:href="@{/organizer#events}" class="text-decoration-none small"><i class="bi bi-arrow-left"></i> Back to dashboard</a>
+  <h2 class="my-3"><span th:text="${editing} ? 'Edit' : 'Create'"></span> <span class="grad-text">event</span></h2>
+  <div class="alert alert-warning" th:if="${event != null and event.adminNote != null}"><strong>Admin note:</strong> <span th:text="${event.adminNote}"></span></div>
+  <div class="alert alert-danger" th:if="${errors != null and !#lists.isEmpty(errors)}"><ul class="mb-0"><li th:each="e : ${errors}" th:text="${e}"></li></ul></div>
+
+  <form th:action="${editing} ? @{/organizer/events/{id}(id=${event.id})} : @{/organizer/events}" th:object="${form}" method="post" enctype="multipart/form-data" class="glass p-4">
+    <div class="row g-3">
+      <div class="col-md-8"><label>Title</label><input class="form-control" th:field="*{title}" maxlength="150" required>
+        <div class="text-danger small" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div></div>
+      <div class="col-md-4"><label>Category</label><select class="form-select" th:field="*{category}" required>
+        <option th:each="c : ${categories}" th:value="${c}" th:text="${c.label}"></option></select></div>
+      <div class="col-12"><label>Description</label><textarea class="form-control" rows="5" th:field="*{description}" maxlength="5000" required></textarea>
+        <div class="text-danger small" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div></div>
+      <div class="col-md-6"><label>Venue</label><input class="form-control" th:field="*{venue}" maxlength="150" required></div>
+      <div class="col-md-6"><label>City / location</label><input class="form-control" th:field="*{city}" maxlength="100" required></div>
+      <div class="col-md-6"><label>Date</label><input type="date" class="form-control" th:field="*{eventDate}" required>
+        <div class="text-danger small" th:if="${#fields.hasErrors('eventDate')}" th:errors="*{eventDate}"></div></div>
+      <div class="col-md-6"><label>Start time</label><input type="time" class="form-control" th:field="*{eventTime}" required>
+        <div class="text-danger small" th:if="${#fields.hasErrors('eventTime')}" th:errors="*{eventTime}"></div></div>
+
+      <div class="col-12"><label>Event image <span class="text-white-50">(JPG or PNG, max 5 MB, at least 400×250)</span></label>
+        <input type="file" class="form-control" name="image" accept="image/jpeg,image/png" th:required="${!editing or event.imagePath == null}">
+        <img th:if="${editing and event != null and event.imagePath != null}" th:src="${event.imagePath}" class="mt-2 rounded-4" style="height:90px" alt="current image"></div>
+
+      <div class="col-12"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="ra" th:field="*{requiresApproval}">
+        <label for="ra" class="form-check-label">Require my approval for each booking request (turn off for instant booking)</label></div></div>
+
+      <div class="col-12"><div class="d-flex justify-content-between align-items-center"><h5 class="mb-2">Ticket categories & capacity</h5>
+        <button type="button" id="addTier" class="btn btn-glass btn-sm"><i class="bi bi-plus-lg"></i> Add category</button></div>
+        <div id="tiers">
+          <div class="row g-2 mb-2 tier-row" th:each="n, i : ${form.tierName}">
+            <div class="col-md-5"><input class="form-control" name="tierName" th:value="${n}" placeholder="e.g. VIP" maxlength="60" required></div>
+            <div class="col-5 col-md-3"><input type="number" min="0" step="1" class="form-control" name="tierPrice" th:value="${form.tierPrice.size() > i.index ? form.tierPrice[i.index] : null}" th:placeholder="'Price (' + ${currency} + ')'" required></div>
+            <div class="col-5 col-md-3"><input type="number" min="1" class="form-control" name="tierCapacity" th:value="${form.tierCapacity.size() > i.index ? form.tierCapacity[i.index] : null}" placeholder="Capacity" required></div>
+            <div class="col-2 col-md-1"><button type="button" class="btn btn-glass w-100 rm-tier"><i class="bi bi-trash"></i></button></div>
+          </div>
+        </div></div>
+    </div>
+    <hr class="my-4">
+    <div class="d-flex gap-2 flex-wrap justify-content-end">
+      <button name="action" value="draft" class="btn btn-glass px-4">Save draft</button>
+      <button name="action" value="submit" class="btn btn-eventora px-4"><i class="bi bi-send me-1"></i>Submit for approval</button>
+    </div>
+  </form>
+</div></div>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

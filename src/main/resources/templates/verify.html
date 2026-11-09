@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Verify ticket')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav(true)}"></nav>
+<main class="auth-wrap"><div class="glass auth-card text-center">
+  <div class="fs-1 grad-text"><i class="bi bi-patch-check"></i></div>
+  <h3>Verify a ticket</h3>
+  <p class="text-white-50">Enter the ticket code printed under the QR code.</p>
+  <form method="get" th:action="@{/verify}" class="d-flex gap-2 mb-3">
+    <input class="form-control" name="code" th:value="${code}" placeholder="EVT-XXXXXXXX..." required maxlength="80"><button class="btn btn-eventora">Verify</button></form>
+  <div th:if="${result != null}">
+    <div class="scan-result" th:classappend="${result == 'VALID'} ? 'verify-ok' : (${result == 'USED'} ? 'verify-used' : 'verify-bad')">
+      <div class="fs-4" th:text="${result == 'VALID'} ? '✅ Valid ticket' : (${result == 'USED'} ? '⚠️ Already used' : (${result == 'CANCELLED'} ? '❌ Cancelled / refunded' : '❌ Not found'))"></div>
+      <div class="small fw-normal mt-2" th:if="${ticket != null}">
+        <div th:text="${ticket.booking.event.title}"></div>
+        <div th:text="${#temporals.format(ticket.booking.event.eventDate,'EEE, dd MMM yyyy')} + ' · ' + ${ticket.booking.event.venue}"></div>
+        <div th:text="${ticket.booking.tier.name} + ' · Holder: ' + ${firstName}"></div>
+      </div>
+    </div>
+  </div>
+  <p class="small text-white-50 mt-3 mb-0">Verifying does not use up the ticket. Entry is granted only when the organizer scans it.</p>
+</div></main>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

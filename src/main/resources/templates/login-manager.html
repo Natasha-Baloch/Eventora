@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Event manager sign in')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav(true)}"></nav>
+<main class="auth-wrap"><div class="glass auth-card">
+  <a th:href="@{/login}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Choose another role</a>
+  <div class="text-center my-3">
+    <div class="fs-1 grad-text"><i class="bi bi-shield-check"></i></div>
+    <h2>Event Manager <span class="grad-text">sign in</span></h2>
+    <p class="text-white-50">Verify organizers, approve events and monitor the platform.</p>
+  </div>
+  <div th:replace="~{fragments :: flash}"></div>
+  <form th:action="@{/login/manager}" method="post" autocomplete="on">
+    <div class="mb-3"><label for="email">Email</label><input type="email" class="form-control form-control-lg" id="email" name="email" maxlength="150" required autofocus></div>
+    <div class="mb-3"><label for="pw">Password</label><input type="password" class="form-control form-control-lg" id="pw" name="password" maxlength="72" required autocomplete="current-password"></div>
+    <button class="btn btn-eventora w-100 py-3">Sign in <i class="bi bi-arrow-right"></i></button>
+  </form>
+  <p class="text-center small text-white-50 mt-3 mb-0">Manager accounts are created by the system administrator.</p>
+</div></main>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

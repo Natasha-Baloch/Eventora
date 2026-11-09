@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head(${event.title})}"></head>
+<body>
+<nav th:replace="~{fragments :: nav(true)}"></nav>
+<section class="hero-sm"><div class="container">
+  <a th:href="@{/events}" class="text-decoration-none small"><i class="bi bi-arrow-left"></i> All events</a>
+  <div class="row g-4 mt-1">
+    <div class="col-lg-7">
+      <div class="detail-img thumb" th:classappend="'cat-' + ${event.category}">
+        <img th:src="${event.imagePath}" th:alt="${event.title}" onerror="this.style.display='none'">
+      </div>
+      <div class="mt-4">
+        <span class="badge st st-PUBLISHED me-2" th:text="${event.category.label}"></span>
+        <span class="badge st" th:if="${preview}" th:classappend="'st-' + ${event.status}" th:text="${event.status}"></span>
+        <h1 class="mt-2" th:text="${event.title}">Title</h1>
+        <div class="row g-3 my-2">
+          <div class="col-sm-6"><div class="glass glass-sm p-3"><i class="bi bi-calendar-event text-warning me-2"></i><span th:text="${#temporals.format(event.eventDate,'EEEE, dd MMMM yyyy')} + ' · ' + ${#temporals.format(event.eventTime,'hh:mm a')}"></span></div></div>
+          <div class="col-sm-6"><div class="glass glass-sm p-3"><i class="bi bi-geo-alt text-info me-2"></i><span th:text="${event.venue} + ', ' + ${event.city}"></span></div></div>
+        </div>
+        <h5 class="mt-4">About this event</h5>
+        <p class="text-white-50" style="white-space:pre-line" th:text="${event.description}"></p>
+        <p class="small"><i class="bi bi-person-badge me-1"></i>Organized by <strong th:text="${event.organizer.companyName} ?: ${event.organizer.displayName}"></strong></p>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="glass p-4 position-sticky" style="top:90px">
+        <h4>Get your tickets</h4>
+        <div th:replace="~{fragments :: flash}"></div>
+        <p class="small text-white-50" th:if="${event.requiresApproval}"><i class="bi bi-person-check me-1"></i>The organizer reviews requests - you pay after approval.</p>
+        <p class="small text-white-50" th:unless="${event.requiresApproval}"><i class="bi bi-lightning-charge me-1"></i>Instant booking - pay right away.</p>
+
+        <form id="bookForm" th:action="@{/customer/book}" method="post" sec:authorize="hasRole('CUSTOMER')">
+          <div class="mb-3">
+            <label class="mb-2">Ticket category</label>
+            <label class="glass glass-sm p-3 d-flex justify-content-between align-items-center mb-2" style="cursor:pointer" th:each="t, i : ${event.tiers}">
+              <span><input class="form-check-input me-2" type="radio" name="tierId" th:value="${t.id}" th:data-price="${t.price}" th:checked="${i.first}" th:disabled="${t.available == 0}" required>
+                <strong th:text="${t.name}"></strong><br><small class="text-white-50 ms-4" th:text="${t.available == 0} ? 'Sold out' : ${t.available} + ' left'"></small></span>
+              <span class="fw-bold grad-text" th:text="${currency} + ' ' + ${#numbers.formatDecimal(t.price,1,'COMMA',0,'POINT')}"></span>
+            </label>
+          </div>
+          <div class="mb-3"><label for="an">Attendee full name</label><input id="an" class="form-control" name="attendeeName" th:value="${me.fullName}" maxlength="100" required></div>
+          <div class="mb-3"><label for="ap">Phone number</label><input id="ap" class="form-control" name="attendeePhone" placeholder="+92 300 1234567" maxlength="20" required></div>
+          <div class="mb-3"><label for="qty">Quantity (max 10)</label><input id="qty" type="number" class="form-control" name="quantity" min="1" max="10" value="1" required></div>
+          <div class="d-flex justify-content-between mb-3"><span class="text-white-50">Total</span><span class="fs-4 fw-bold"><span th:text="${currency}"></span> <span id="bookTotal">0</span></span></div>
+          <button class="btn btn-eventora w-100 py-3" th:disabled="${preview or event.past}">
+            <span th:text="${event.requiresApproval} ? 'Request tickets' : 'Book now'"></span></button>
+        </form>
+
+        <div sec:authorize="!isAuthenticated()">
+          <ul class="list-unstyled">
+            <li class="d-flex justify-content-between py-2 border-bottom border-secondary" th:each="t : ${event.tiers}">
+              <span th:text="${t.name}"></span><strong th:text="${currency} + ' ' + ${#numbers.formatDecimal(t.price,1,'COMMA',0,'POINT')}"></strong></li>
+          </ul>
+          <a th:href="@{/login}" class="btn btn-eventora w-100 py-3">Sign in to book</a>
+        </div>
+        <div sec:authorize="isAuthenticated() and !hasRole('CUSTOMER')" class="alert alert-warning mb-0">Only customer accounts can book tickets.</div>
+      </div>
+    </div>
+  </div>
+</div></section>
+<footer th:replace="~{fragments :: footer}"></footer>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

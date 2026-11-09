@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Admin')}"></head>
+<body>
+<nav th:replace="~{fragments :: dashnav}"></nav>
+<div class="dash"><div class="container-fluid px-4"><div class="row g-4">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="col-lg-2"><div class="glass side">
+    <div class="nav flex-column nav-pills">
+      <span class="nav-link sec">Insights</span>
+      <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#t-overview" data-tab="overview"><i class="bi bi-speedometer2"></i>Overview</button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-finance" data-tab="finance"><i class="bi bi-cash-coin"></i>Profit &amp; Budget</button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-reports" data-tab="reports"><i class="bi bi-file-earmark-bar-graph"></i>Reports</button>
+      <span class="nav-link sec">Approvals</span>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-approvals" data-tab="approvals"><i class="bi bi-patch-check"></i>New Events
+        <span class="badge bg-warning text-dark rounded-pill" th:if="${!#lists.isEmpty(pendingEvents)}" th:text="${#lists.size(pendingEvents)}"></span></button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-organizers" data-tab="organizers"><i class="bi bi-person-badge"></i>Organizers
+        <span class="badge bg-warning text-dark rounded-pill" th:if="${!#lists.isEmpty(pendingOrganizers)}" th:text="${#lists.size(pendingOrganizers)}"></span></button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-refunds" data-tab="refunds"><i class="bi bi-arrow-counterclockwise"></i>Refunds
+        <span class="badge bg-warning text-dark rounded-pill" th:if="${!#lists.isEmpty(refunds)}" th:text="${#lists.size(refunds)}"></span></button>
+      <span class="nav-link sec">Manage</span>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-users" data-tab="users"><i class="bi bi-people"></i>Users</button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-events" data-tab="events"><i class="bi bi-calendar2-event"></i>All Events</button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-bookings" data-tab="bookings"><i class="bi bi-journal-check"></i>Bookings</button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-payments" data-tab="payments"><i class="bi bi-credit-card"></i>Payments</button>
+      <span class="nav-link sec">Support</span>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-feedback" data-tab="feedback"><i class="bi bi-star"></i>Feedback</button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-complaints" data-tab="complaints"><i class="bi bi-exclamation-octagon"></i>Issues
+        <span class="badge bg-danger rounded-pill" th:if="${openComplaints > 0}" th:text="${openComplaints}"></span></button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-notifications" data-tab="notifications"><i class="bi bi-bell"></i>Notifications
+        <span class="badge bg-danger rounded-pill" th:if="${unread != null and unread > 0}" th:text="${unread}"></span></button>
+    </div>
+  </div></aside>
+
+  <main class="col-lg-10">
+    <div th:replace="~{fragments :: flash}"></div>
+    <div class="tab-content">
+
+      <!-- ============ OVERVIEW ============ -->
+      <div class="tab-pane fade show active" id="t-overview">
+        <div class="ad-hero mb-4">
+          <h2 class="mb-1">Welcome back, <span th:text="${me.displayName}">Admin</span> 👋</h2>
+          <p><span th:text="${liveEvents}">0</span> live events · <span th:text="${#lists.size(users)}">0</span> members · <span th:text="${sum.ticketsSold}">0</span> tickets sold so far. Here is how Eventora is doing today.</p>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-6 col-xl-3"><div class="ad-stat g-rev"><div class="d-flex justify-content-between"><div><div class="lbl">Gross revenue</div><div class="val" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.gross,1,'COMMA',0,'POINT')}"></div><div class="sub">all paid bookings</div></div><div class="ic"><i class="bi bi-graph-up-arrow"></i></div></div></div></div>
+          <div class="col-6 col-xl-3"><div class="ad-stat g-profit"><div class="d-flex justify-content-between"><div><div class="lbl">Platform profit</div><div class="val" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.profit,1,'COMMA',0,'POINT')}"></div><div class="sub"><span th:text="${pct}">10</span>% commission on sales</div></div><div class="ic"><i class="bi bi-piggy-bank"></i></div></div></div></div>
+          <div class="col-6 col-xl-3"><div class="ad-stat g-pay"><div class="d-flex justify-content-between"><div><div class="lbl">Organizer payouts</div><div class="val" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.payouts,1,'COMMA',0,'POINT')}"></div><div class="sub">owed to organizers</div></div><div class="ic"><i class="bi bi-wallet2"></i></div></div></div></div>
+          <div class="col-6 col-xl-3"><div class="ad-stat g-ref"><div class="d-flex justify-content-between"><div><div class="lbl">Refunded</div><div class="val" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.refunded,1,'COMMA',0,'POINT')}"></div><div class="sub">returned to customers</div></div><div class="ic"><i class="bi bi-arrow-counterclockwise"></i></div></div></div></div>
+        </div>
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-xl-3"><div class="ad-stat g-blue"><div class="d-flex justify-content-between"><div><div class="lbl">Users</div><div class="val" th:text="${#lists.size(users)}"></div><div class="sub"><span th:text="${#lists.size(organizers)}">0</span> organizers</div></div><div class="ic"><i class="bi bi-people"></i></div></div></div></div>
+          <div class="col-6 col-xl-3"><div class="ad-stat g-pink"><div class="d-flex justify-content-between"><div><div class="lbl">Events</div><div class="val" th:text="${#lists.size(events)}"></div><div class="sub"><span th:text="${liveEvents}">0</span> live now</div></div><div class="ic"><i class="bi bi-calendar2-event"></i></div></div></div></div>
+          <div class="col-6 col-xl-3"><div class="ad-stat g-rev"><div class="d-flex justify-content-between"><div><div class="lbl">Tickets sold</div><div class="val" th:text="${sum.ticketsSold}"></div><div class="sub"><span th:text="${sum.checkedIn}">0</span> checked in</div></div><div class="ic"><i class="bi bi-ticket-perforated"></i></div></div><div class="ad-bar mt-2"><span th:style="'width:' + ${sum.fillPct} + '%'"></span></div></div></div>
+          <div class="col-6 col-xl-3"><div class="ad-stat g-pay"><div class="d-flex justify-content-between"><div><div class="lbl">Average rating</div><div class="val" th:text="${sum.ratingCount > 0} ? ${#numbers.formatDecimal(sum.avgRating,1,1)} + ' / 5' : '-'"></div><div class="sub"><span th:text="${sum.ratingCount}">0</span> reviews</div></div><div class="ic"><i class="bi bi-star-fill"></i></div></div></div></div>
+        </div>
+
+        <h5 class="mb-3"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Needs your attention</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-xl-3"><button type="button" data-go="approvals" class="ad-todo" th:classappend="${!#lists.isEmpty(pendingEvents)} ? 'hot'"><span class="n" th:text="${#lists.size(pendingEvents)}">0</span><span><strong>Events</strong><br><small class="text-white-50">waiting for approval</small></span></button></div>
+          <div class="col-6 col-xl-3"><button type="button" data-go="organizers" class="ad-todo" th:classappend="${!#lists.isEmpty(pendingOrganizers)} ? 'hot'"><span class="n" th:text="${#lists.size(pendingOrganizers)}">0</span><span><strong>Organizers</strong><br><small class="text-white-50">waiting for verification</small></span></button></div>
+          <div class="col-6 col-xl-3"><button type="button" data-go="refunds" class="ad-todo" th:classappend="${!#lists.isEmpty(refunds)} ? 'hot'"><span class="n" th:text="${#lists.size(refunds)}">0</span><span><strong>Refunds</strong><br><small class="text-white-50">to decide</small></span></button></div>
+          <div class="col-6 col-xl-3"><button type="button" data-go="complaints" class="ad-todo" th:classappend="${openComplaints > 0} ? 'hot'"><span class="n" th:text="${openComplaints}">0</span><span><strong>Issues</strong><br><small class="text-white-50">open complaints</small></span></button></div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-8"><div class="glass p-4"><div class="ad-card-title"><i class="bi bi-graph-up"></i>Revenue &amp; profit - last 14 days</div><canvas id="cDaily" height="110"></canvas></div></div>
+          <div class="col-lg-4"><div class="glass p-4"><div class="ad-card-title"><i class="bi bi-pie-chart"></i>Users by role</div><canvas id="cRole"></canvas></div></div>
+          <div class="col-lg-7"><div class="glass p-4"><div class="ad-card-title"><i class="bi bi-bar-chart"></i>Revenue by category</div><canvas id="cCat" height="120"></canvas></div></div>
+          <div class="col-lg-5"><div class="glass p-4"><div class="ad-card-title"><i class="bi bi-diagram-3"></i>Bookings by status</div><canvas id="cStatus"></canvas></div></div>
+          <div class="col-lg-6"><div class="glass p-4 h-100"><div class="ad-card-title"><i class="bi bi-trophy"></i>Top earning events</div>
+            <div class="d-flex align-items-center gap-3 mb-3" th:each="r, i : ${topEvents}">
+              <span class="ad-rank" th:text="${i.count}">1</span>
+              <div class="flex-grow-1"><div class="fw-semibold" th:text="${r.event.title}"></div><div class="ad-bar green mt-1"><span th:style="'width:' + ${r.fillPct} + '%'"></span></div></div>
+              <div class="text-end"><div class="fw-bold" th:text="${currency} + ' ' + ${#numbers.formatDecimal(r.revenue,1,'COMMA',0,'POINT')}"></div><small class="text-white-50"><span th:text="${r.sold}">0</span> sold</small></div>
+            </div>
+            <div class="text-white-50 text-center py-3" th:if="${#lists.isEmpty(topEvents)}">No sales yet.</div></div></div>
+          <div class="col-lg-6"><div class="glass p-4 h-100"><div class="ad-card-title"><i class="bi bi-clock-history"></i>Latest bookings</div>
+            <div class="d-flex align-items-center gap-3 mb-3" th:each="b : ${recentBookings}">
+              <span class="ad-avatar" th:text="${#strings.toUpperCase(#strings.substring(b.customer.email,0,1))}">A</span>
+              <div class="flex-grow-1"><div class="fw-semibold small" th:text="${b.event.title}"></div><small class="text-white-50" th:text="${b.customer.email} + ' · ' + ${b.quantity} + ' ticket(s)'"></small></div>
+              <div class="text-end"><div class="fw-bold small" th:text="${currency} + ' ' + ${#numbers.formatDecimal(b.total,1,'COMMA',0,'POINT')}"></div><span class="badge rounded-pill st" th:classappend="'st-' + ${b.status}" th:text="${#strings.replace(b.status,'_',' ')}"></span></div>
+            </div>
+            <div class="text-white-50 text-center py-3" th:if="${#lists.isEmpty(recentBookings)}">No bookings yet.</div></div></div>
+        </div>
+      </div>
+
+      <!-- ============ PROFIT & BUDGET ============ -->
+      <div class="tab-pane fade" id="t-finance">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+          <h3 class="mb-0">Profit &amp; <span class="grad-text">budget</span></h3>
+          <span class="ad-pill"><i class="bi bi-percent"></i>Platform commission: <strong th:text="${pct} + '%'">10%</strong></span>
+        </div>
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-xl-4"><div class="ad-stat g-rev"><div class="lbl">Gross sales</div><div class="val" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.gross,1,'COMMA',0,'POINT')}"></div><div class="sub">money paid by customers</div></div></div>
+          <div class="col-6 col-xl-4"><div class="ad-stat g-profit"><div class="lbl">Eventora profit</div><div class="val" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.profit,1,'COMMA',0,'POINT')}"></div><div class="sub">our commission</div></div></div>
+          <div class="col-6 col-xl-4"><div class="ad-stat g-pay"><div class="lbl">Organizer payouts</div><div class="val" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.payouts,1,'COMMA',0,'POINT')}"></div><div class="sub">after our commission</div></div></div>
+          <div class="col-6 col-xl-4"><div class="ad-stat g-blue"><div class="lbl">Sales today</div><div class="val" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.today,1,'COMMA',0,'POINT')}"></div><div class="sub">since midnight</div></div></div>
+          <div class="col-6 col-xl-4"><div class="ad-stat g-pink"><div class="lbl">Sales this month</div><div class="val" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.thisMonth,1,'COMMA',0,'POINT')}"></div><div class="sub">current calendar month</div></div></div>
+          <div class="col-6 col-xl-4"><div class="ad-stat g-ref"><div class="lbl">Awaiting payment</div><div class="val" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.pending,1,'COMMA',0,'POINT')}"></div><div class="sub">approved, not paid yet</div></div></div>
+        </div>
+
+        <div class="row g-4 mb-4">
+          <div class="col-lg-8"><div class="glass p-4"><div class="ad-card-title"><i class="bi bi-bar-chart-line"></i>Monthly sales vs profit</div><canvas id="cMonthly" height="110"></canvas></div></div>
+          <div class="col-lg-4"><div class="glass p-4 h-100"><div class="ad-card-title"><i class="bi bi-bullseye"></i>Revenue budget</div>
+            <p class="small text-white-50">Budget = every ticket of all live events sold at full price.</p>
+            <div class="d-flex justify-content-between small"><span>Target</span><strong th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.potential,1,'COMMA',0,'POINT')}"></strong></div>
+            <div class="d-flex justify-content-between small mb-2"><span>Achieved</span><strong th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.gross,1,'COMMA',0,'POINT')}"></strong></div>
+            <div class="ad-bar green" style="height:14px"><span th:style="'width:' + ${sum.achievedPct} + '%'"></span></div>
+            <div class="text-end small mt-1" th:text="${sum.achievedPct} + '% of budget reached'"></div>
+            <hr class="border-secondary">
+            <div class="d-flex justify-content-between small"><span>Seats sold</span><strong th:text="${sum.ticketsSold} + ' / ' + ${sum.capacity}"></strong></div>
+            <div class="ad-bar mt-2"><span th:style="'width:' + ${sum.fillPct} + '%'"></span></div></div></div>
+        </div>
+
+        <div class="ad-card-title"><i class="bi bi-person-badge"></i>Organizer budget &amp; payouts</div>
+        <div class="glass p-2 table-responsive mb-4"><table class="table table-hover sortable mb-0">
+          <thead><tr><th>Organizer</th><th>Events</th><th>Tickets</th><th>Revenue</th><th>Eventora profit</th><th>Payout</th><th>Share</th></tr></thead>
+          <tbody>
+            <tr th:each="o : ${orgRows}">
+              <td><div class="d-flex align-items-center gap-2"><span class="ad-avatar" th:text="${#strings.toUpperCase(#strings.substring(o.organizer.displayName,0,1))}">O</span><div><strong th:text="${o.organizer.companyName} ?: ${o.organizer.displayName}"></strong><div class="small text-white-50" th:text="${o.organizer.email}"></div></div></div></td>
+              <td th:text="${o.events} + ' (' + ${o.live} + ' live)'"></td>
+              <td th:text="${o.sold}"></td>
+              <td th:text="${currency} + ' ' + ${#numbers.formatDecimal(o.revenue,1,'COMMA',0,'POINT')}" th:data-sort="${o.revenue}"></td>
+              <td class="text-success fw-semibold" th:text="${currency} + ' ' + ${#numbers.formatDecimal(o.fee,1,'COMMA',0,'POINT')}"></td>
+              <td th:text="${currency} + ' ' + ${#numbers.formatDecimal(o.payout,1,'COMMA',0,'POINT')}"></td>
+              <td style="min-width:130px"><div class="ad-bar"><span th:style="'width:' + ${o.sharePct} + '%'"></span></div><small class="text-white-50" th:text="${o.sharePct} + '%'"></small></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(orgRows)}"><td colspan="7" class="text-center text-white-50 py-4">No organizers yet.</td></tr>
+          </tbody></table></div>
+
+        <div class="ad-card-title"><i class="bi bi-calendar2-event"></i>Event budget (target vs actual)</div>
+        <div class="glass p-2 table-responsive"><table class="table table-hover sortable mb-0">
+          <thead><tr><th>Event</th><th>Sold</th><th>Budget (full house)</th><th>Revenue</th><th>Eventora profit</th><th>Payout</th><th>Goal reached</th></tr></thead>
+          <tbody>
+            <tr th:each="r : ${eventRows}">
+              <td><div class="fw-semibold" th:text="${r.event.title}"></div><span class="badge rounded-pill st" th:classappend="'st-' + ${r.event.status}" th:text="${#strings.replace(r.event.status,'_',' ')}"></span></td>
+              <td th:text="${r.sold} + ' / ' + ${r.capacity}" th:data-sort="${r.sold}"></td>
+              <td th:text="${currency} + ' ' + ${#numbers.formatDecimal(r.potential,1,'COMMA',0,'POINT')}"></td>
+              <td th:text="${currency} + ' ' + ${#numbers.formatDecimal(r.revenue,1,'COMMA',0,'POINT')}" th:data-sort="${r.revenue}"></td>
+              <td class="text-success fw-semibold" th:text="${currency} + ' ' + ${#numbers.formatDecimal(r.fee,1,'COMMA',0,'POINT')}"></td>
+              <td th:text="${currency} + ' ' + ${#numbers.formatDecimal(r.payout,1,'COMMA',0,'POINT')}"></td>
+              <td style="min-width:130px"><div class="ad-bar green"><span th:style="'width:' + ${r.budgetPct} + '%'"></span></div><small class="text-white-50" th:text="${r.budgetPct} + '%'"></small></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(eventRows)}"><td colspan="7" class="text-center text-white-50 py-4">No events yet.</td></tr>
+          </tbody></table></div>
+      </div>
+
+      <!-- ============ REPORTS ============ -->
+      <div class="tab-pane fade" id="t-reports">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+          <h3 class="mb-0">Reports &amp; <span class="grad-text">exports</span></h3>
+          <button type="button" class="btn btn-eventora btn-sm no-print" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print summary</button>
+        </div>
+        <div class="glass p-4 mb-4">
+          <div class="ad-card-title"><i class="bi bi-receipt"></i>Financial summary</div>
+          <div class="table-responsive"><table class="table mb-0">
+            <tbody>
+              <tr><td>Gross ticket sales</td><td class="text-end fw-semibold" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.gross,1,'COMMA',0,'POINT')}"></td></tr>
+              <tr><td>Eventora profit (<span th:text="${pct}">10</span>% commission)</td><td class="text-end fw-semibold text-success" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.profit,1,'COMMA',0,'POINT')}"></td></tr>
+              <tr><td>Owed to organizers</td><td class="text-end fw-semibold" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.payouts,1,'COMMA',0,'POINT')}"></td></tr>
+              <tr><td>Refunded to customers</td><td class="text-end fw-semibold" th:text="${currency} + ' ' + ${#numbers.formatDecimal(sum.refunded,1,'COMMA',0,'POINT')}"></td></tr>
+              <tr><td>Tickets sold / checked in</td><td class="text-end fw-semibold" th:text="${sum.ticketsSold} + ' / ' + ${sum.checkedIn}"></td></tr>
+              <tr><td>Members / organizers / live events</td><td class="text-end fw-semibold" th:text="${#lists.size(users)} + ' / ' + ${#lists.size(organizers)} + ' / ' + ${liveEvents}"></td></tr>
+              <tr><td>Average customer rating</td><td class="text-end fw-semibold" th:text="${sum.ratingCount > 0} ? ${#numbers.formatDecimal(sum.avgRating,1,1)} + ' / 5 (' + ${sum.ratingCount} + ' reviews)' : 'No reviews yet'"></td></tr>
+            </tbody></table></div>
+        </div>
+        <div class="ad-card-title no-print"><i class="bi bi-download"></i>Download as CSV (opens in Excel)</div>
+        <div class="row g-3 no-print">
+          <div class="col-md-6 col-xl-4"><a class="ad-export" th:href="@{/admin/export/events.csv}"><span class="ic"><i class="bi bi-calendar2-event"></i></span><span><strong>Events &amp; profit</strong><br><small class="text-white-50">sales, budget, payout per event</small></span></a></div>
+          <div class="col-md-6 col-xl-4"><a class="ad-export" th:href="@{/admin/export/organizers.csv}"><span class="ic"><i class="bi bi-person-badge"></i></span><span><strong>Organizer payouts</strong><br><small class="text-white-50">revenue, commission, payout</small></span></a></div>
+          <div class="col-md-6 col-xl-4"><a class="ad-export" th:href="@{/admin/export/bookings.csv}"><span class="ic"><i class="bi bi-journal-check"></i></span><span><strong>All bookings</strong><br><small class="text-white-50">every ticket order</small></span></a></div>
+          <div class="col-md-6 col-xl-4"><a class="ad-export" th:href="@{/admin/export/payments.csv}"><span class="ic"><i class="bi bi-credit-card"></i></span><span><strong>Payments</strong><br><small class="text-white-50">gateway transactions</small></span></a></div>
+          <div class="col-md-6 col-xl-4"><a class="ad-export" th:href="@{/admin/export/users.csv}"><span class="ic"><i class="bi bi-people"></i></span><span><strong>Users</strong><br><small class="text-white-50">customers, organizers, admins</small></span></a></div>
+          <div class="col-md-6 col-xl-4"><a class="ad-export" th:href="@{/admin/export/feedback.csv}"><span class="ic"><i class="bi bi-star"></i></span><span><strong>Feedback</strong><br><small class="text-white-50">ratings and comments</small></span></a></div>
+          <div class="col-md-6 col-xl-4"><a class="ad-export" th:href="@{/admin/export/complaints.csv}"><span class="ic"><i class="bi bi-exclamation-octagon"></i></span><span><strong>Issues &amp; complaints</strong><br><small class="text-white-50">with admin responses</small></span></a></div>
+        </div>
+      </div>
+
+      <!-- ============ EVENT APPROVALS ============ -->
+      <div class="tab-pane fade" id="t-approvals">
+        <h3 class="mb-3">New event <span class="grad-text">approvals</span></h3>
+        <div class="glass p-5 text-center text-white-50" th:if="${#lists.isEmpty(pendingEvents)}"><div class="display-5">🎉</div>All caught up - no events are waiting for review.</div>
+        <div class="row g-4"><div class="col-xl-6" th:each="e : ${pendingEvents}"><div class="glass ad-approve">
+          <div class="pic" th:style="${e.imagePath != null} ? ('background-image:url(' + ${e.imagePath} + ')') : ''"><span class="badge st st-PENDING_APPROVAL tag">PENDING REVIEW</span></div>
+          <div class="p-3">
+            <h5 class="mb-1" th:text="${e.title}"></h5>
+            <div class="small text-white-50 mb-2" th:text="${e.category.label} + ' · ' + ${#temporals.format(e.eventDate,'dd MMM yyyy')} + ' · ' + ${e.venue} + ', ' + ${e.city}"></div>
+            <div class="d-flex flex-wrap gap-2 mb-2">
+              <span class="ad-pill"><i class="bi bi-building"></i><span th:text="${e.organizer.companyName} ?: ${e.organizer.email}"></span></span>
+              <span class="ad-pill"><i class="bi bi-people"></i>Capacity <span th:text="${e.capacity}"></span></span>
+              <span class="ad-pill" th:each="t : ${e.tiers}"><i class="bi bi-ticket-perforated"></i><span th:text="${t.name} + ' · ' + ${currency} + ' ' + ${#numbers.formatDecimal(t.price,1,'COMMA',0,'POINT')}"></span></span>
+            </div>
+            <p class="small text-white-50" th:text="${#strings.abbreviate(e.description,220)}"></p>
+            <form th:action="@{/admin}" method="post" class="row g-2">
+              <div class="col-12"><input class="form-control form-control-sm" name="note" placeholder="Note for organizer (required for reject / changes)"></div>
+              <div class="col-12 d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-cyan" th:formaction="@{/admin/events/{id}/approve(id=${e.id})}"><i class="bi bi-check-lg me-1"></i>Approve</button>
+                <button class="btn btn-sm btn-glass" th:formaction="@{/admin/events/{id}/changes(id=${e.id})}">Request changes</button>
+                <button class="btn btn-sm btn-glass" th:formaction="@{/admin/events/{id}/reject(id=${e.id})}"><i class="bi bi-x-lg me-1"></i>Reject</button>
+                <a class="btn btn-sm btn-glass ms-auto" th:href="@{/events/{id}(id=${e.id})}" target="_blank">Preview</a></div>
+            </form>
+          </div></div></div></div>
+      </div>
+
+      <!-- ============ ORGANIZERS ============ -->
+      <div class="tab-pane fade" id="t-organizers">
+        <h3 class="mb-3">Organizer <span class="grad-text">verification</span></h3>
+        <div class="ad-card-title" th:if="${!#lists.isEmpty(pendingOrganizers)}"><i class="bi bi-hourglass-split text-warning"></i>Waiting for your decision</div>
+        <div class="row g-3 mb-4"><div class="col-xl-6" th:each="o : ${pendingOrganizers}"><div class="glass p-3 ad-todo hot d-block">
+          <div class="d-flex align-items-center gap-3 mb-2"><span class="ad-avatar" th:text="${#strings.toUpperCase(#strings.substring(o.displayName,0,1))}">O</span>
+            <div><strong th:text="${o.companyName} ?: ${o.displayName}"></strong><div class="small text-white-50" th:text="${o.displayName} + ' · ' + ${o.email} + ' · ' + ${o.phone}"></div></div></div>
+          <p class="small text-white-50 mb-2" th:text="${o.orgBio} ?: 'No description provided.'"></p>
+          <form th:action="@{/admin}" method="post" class="d-flex gap-2 flex-wrap">
+            <input class="form-control form-control-sm w-auto flex-grow-1" name="note" placeholder="note (optional)">
+            <button class="btn btn-sm btn-cyan" th:formaction="@{/admin/organizers/{id}/verify(id=${o.id})}"><i class="bi bi-patch-check me-1"></i>Approve</button>
+            <button class="btn btn-sm btn-glass" th:formaction="@{/admin/organizers/{id}/reject(id=${o.id})}">Reject</button></form>
+        </div></div></div>
+
+        <div class="ad-card-title"><i class="bi bi-person-badge"></i>All organizers</div>
+        <div class="glass p-2 table-responsive"><table class="table table-hover sortable mb-0">
+          <thead><tr><th>Organizer</th><th>Company</th><th>Phone</th><th>Status</th><th>About</th><th></th></tr></thead>
+          <tbody>
+            <tr th:each="o : ${organizers}">
+              <td><strong th:text="${o.displayName}"></strong><div class="small text-white-50" th:text="${o.email}"></div></td>
+              <td th:text="${o.companyName} ?: '-'"></td><td th:text="${o.phone} ?: '-'"></td>
+              <td><span class="badge rounded-pill st" th:classappend="'st-' + ${o.organizerStatus}" th:text="${#strings.replace(o.organizerStatus,'_',' ')}"></span></td>
+              <td class="small" style="max-width:260px" th:text="${#strings.abbreviate(o.orgBio,110)}"></td>
+              <td class="text-end"><form th:action="@{/admin}" method="post" class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                <input class="form-control form-control-sm w-auto" name="note" placeholder="note">
+                <button class="btn btn-sm btn-cyan" th:formaction="@{/admin/organizers/{id}/verify(id=${o.id})}">Verify</button>
+                <button class="btn btn-sm btn-glass" th:formaction="@{/admin/organizers/{id}/reject(id=${o.id})}">Reject</button>
+                <button class="btn btn-sm btn-glass" th:formaction="@{/admin/organizers/{id}/suspend(id=${o.id})}" onclick="return confirm('Suspend this organizer and their live events?')">Suspend</button></form></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(organizers)}"><td colspan="6" class="text-center text-white-50 py-4">No organizers yet.</td></tr>
+          </tbody></table></div>
+      </div>
+
+      <!-- ============ REFUNDS ============ -->
+      <div class="tab-pane fade" id="t-refunds">
+        <h3 class="mb-3">Refund <span class="grad-text">requests</span></h3>
+        <div class="glass p-2 table-responsive"><table class="table mb-0">
+          <thead><tr><th>Booking</th><th>Customer</th><th>Event</th><th>Amount</th><th>Reason</th><th></th></tr></thead>
+          <tbody><tr th:each="b : ${refunds}"><td class="small" th:text="${b.reference}"></td><td th:text="${b.customer.email}"></td><td th:text="${b.event.title}"></td>
+            <td th:text="${currency} + ' ' + ${#numbers.formatDecimal(b.total,1,'COMMA',0,'POINT')}"></td><td class="small" th:text="${b.refundReason}"></td>
+            <td class="text-end text-nowrap"><form th:action="@{/admin/refunds/{id}/approve(id=${b.id})}" method="post" class="d-inline"><button class="btn btn-sm btn-cyan">Approve</button></form>
+              <form th:action="@{/admin/refunds/{id}/reject(id=${b.id})}" method="post" class="d-inline"><button class="btn btn-sm btn-glass">Decline</button></form></td></tr>
+            <tr th:if="${#lists.isEmpty(refunds)}"><td colspan="6" class="text-center text-white-50 py-4">No pending refunds.</td></tr></tbody></table></div>
+      </div>
+
+      <!-- ============ USERS ============ -->
+      <div class="tab-pane fade" id="t-users">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><h3 class="mb-0">Users</h3>
+          <div class="d-flex gap-2 flex-wrap"><input class="form-control w-auto table-filter" data-target="#ut" placeholder="Search users...">
+            <form th:action="@{/admin/users/admin}" method="post" class="d-flex gap-2"><input type="email" class="form-control w-auto" name="email" placeholder="new admin email" required><button class="btn btn-eventora btn-sm">Add admin</button></form></div></div>
+        <div class="ad-chips d-flex gap-2 flex-wrap mb-3" data-rows="#ut tbody tr">
+          <span class="chip on" data-filter="">All</span><span class="chip" data-filter="CUSTOMER">Customers</span><span class="chip" data-filter="ORGANIZER">Organizers</span><span class="chip" data-filter="ADMIN">Admins</span></div>
+        <div class="glass p-2 table-responsive"><table class="table table-hover sortable mb-0" id="ut">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Status</th><th></th></tr></thead>
+          <tbody><tr th:each="u : ${users}" th:attr="data-state=${u.role.name()}">
+            <td th:text="${u.displayName}"></td><td th:text="${u.email}"></td>
+            <td><span class="badge st" th:classappend="${u.role.name() == 'ADMIN'} ? 'st-REFUNDED' : (${u.role.name() == 'ORGANIZER'} ? 'st-REQUESTED' : 'st-AWAITING_PAYMENT')" th:text="${u.role}"></span></td>
+            <td class="small" th:text="${#temporals.format(u.createdAt,'dd MMM yyyy')}" th:data-sort="${u.id}"></td>
+            <td><span class="badge st" th:classappend="${u.suspended} ? 'st-SUSPENDED' : 'st-PAID'" th:text="${u.suspended} ? 'SUSPENDED' : 'ACTIVE'"></span></td>
+            <td class="text-end"><form th:if="${me.id != u.id}" th:action="@{/admin/users/{id}/{a}(id=${u.id},a=${u.suspended} ? 'activate' : 'suspend')}" method="post"><button class="btn btn-sm btn-glass" th:text="${u.suspended} ? 'Activate' : 'Suspend'"></button></form></td>
+          </tr></tbody></table></div>
+      </div>
+
+      <!-- ============ ALL EVENTS ============ -->
+      <div class="tab-pane fade" id="t-events">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><h3 class="mb-0">All events</h3><input class="form-control w-auto table-filter" data-target="#et" placeholder="Search events..."></div>
+        <div class="ad-chips d-flex gap-2 flex-wrap mb-3" data-rows="#et tbody tr">
+          <span class="chip on" data-filter="">All</span><span class="chip" data-filter="PUBLISHED">Live</span><span class="chip" data-filter="PENDING_APPROVAL">Pending</span><span class="chip" data-filter="SUSPENDED">Suspended</span><span class="chip" data-filter="REJECTED">Rejected</span></div>
+        <div class="glass p-2 table-responsive"><table class="table table-hover sortable mb-0" id="et">
+          <thead><tr><th>Event</th><th>Organizer</th><th>Date</th><th>Sold</th><th>Revenue</th><th>Status</th><th></th></tr></thead>
+          <tbody><tr th:each="r : ${eventRows}" th:attr="data-state=${r.event.status.name()}">
+            <td><div class="d-flex align-items-center gap-2"><img class="mini-thumb" th:src="${r.event.imagePath}" onerror="this.className='thumb-fallback';this.removeAttribute('src')" alt=""><a th:href="@{/events/{id}(id=${r.event.id})}" class="text-decoration-none fw-semibold" th:text="${r.event.title}"></a></div></td>
+            <td th:text="${r.event.organizer.companyName} ?: ${r.event.organizer.email}"></td>
+            <td th:text="${#temporals.format(r.event.eventDate,'dd MMM yyyy')}" th:data-sort="${r.event.eventDate}"></td>
+            <td th:text="${r.sold} + ' / ' + ${r.capacity}" th:data-sort="${r.sold}"></td>
+            <td th:text="${currency} + ' ' + ${#numbers.formatDecimal(r.revenue,1,'COMMA',0,'POINT')}" th:data-sort="${r.revenue}"></td>
+            <td><span class="badge rounded-pill st" th:classappend="'st-' + ${r.event.status}" th:text="${#strings.replace(r.event.status,'_',' ')}"></span></td>
+            <td class="text-end"><form th:action="@{/admin}" method="post" class="d-inline-flex gap-1">
+              <input class="form-control form-control-sm w-auto" name="note" placeholder="reason">
+              <button th:if="${r.event.status.name() == 'PENDING_APPROVAL'}" class="btn btn-sm btn-cyan" th:formaction="@{/admin/events/{id}/approve(id=${r.event.id})}">Approve</button>
+              <button th:if="${r.event.status.name() == 'PUBLISHED'}" class="btn btn-sm btn-glass" th:formaction="@{/admin/events/{id}/suspend(id=${r.event.id})}">Suspend</button>
+              <button th:if="${r.event.status.name() == 'SUSPENDED'}" class="btn btn-sm btn-cyan" th:formaction="@{/admin/events/{id}/restore(id=${r.event.id})}">Restore</button></form></td>
+          </tr></tbody></table></div>
+      </div>
+
+      <!-- ============ BOOKINGS ============ -->
+      <div class="tab-pane fade" id="t-bookings">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><h3 class="mb-0">All bookings</h3><input class="form-control w-auto table-filter" data-target="#bt" placeholder="Search bookings..."></div>
+        <div class="ad-chips d-flex gap-2 flex-wrap mb-3" data-rows="#bt tbody tr">
+          <span class="chip on" data-filter="">All</span><span class="chip" data-filter="PAID">Paid</span><span class="chip" data-filter="AWAITING_PAYMENT">Awaiting payment</span><span class="chip" data-filter="REQUESTED">Requested</span><span class="chip" data-filter="REFUNDED">Refunded</span><span class="chip" data-filter="CANCELLED">Cancelled</span></div>
+        <div class="glass p-2 table-responsive"><table class="table table-hover sortable mb-0" id="bt">
+          <thead><tr><th>Ref</th><th>Customer</th><th>Event</th><th>Qty</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody><tr th:each="b : ${bookings}" th:attr="data-state=${b.status.name()}"><td class="small" th:text="${b.reference}"></td><td th:text="${b.customer.email}"></td><td th:text="${b.event.title}"></td><td th:text="${b.quantity}"></td>
+            <td th:text="${#numbers.formatDecimal(b.total,1,'COMMA',0,'POINT')}"></td>
+            <td><span class="badge rounded-pill st" th:classappend="'st-' + ${b.status}" th:text="${#strings.replace(b.status,'_',' ')}"></span></td>
+            <td class="small" th:text="${#temporals.format(b.createdAt,'dd MMM HH:mm')}" th:data-sort="${b.id}"></td></tr></tbody></table></div>
+      </div>
+
+      <!-- ============ PAYMENTS ============ -->
+      <div class="tab-pane fade" id="t-payments">
+        <div class="d-flex justify-content-between align-items-center mb-3"><h3 class="mb-0">Payments</h3><input class="form-control w-auto table-filter" data-target="#pt" placeholder="Search payments..."></div>
+        <div class="glass p-2 table-responsive"><table class="table table-hover sortable mb-0" id="pt">
+          <thead><tr><th>Date</th><th>Booking</th><th>Customer</th><th>Gateway ref</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody><tr th:each="p : ${payments}"><td class="small" th:text="${#temporals.format(p.createdAt,'dd MMM HH:mm')}" th:data-sort="${p.id}"></td><td class="small" th:text="${p.booking.reference}"></td>
+            <td th:text="${p.booking.customer.email}"></td><td class="small" th:text="${p.gatewayRef}"></td>
+            <td th:text="${#numbers.formatDecimal(p.amount,1,'COMMA',0,'POINT')}"></td>
+            <td><span class="badge rounded-pill st" th:classappend="'st-' + ${p.status}" th:text="${p.status}"></span></td></tr></tbody></table></div>
+      </div>
+
+      <!-- ============ FEEDBACK ============ -->
+      <div class="tab-pane fade" id="t-feedback">
+        <h3 class="mb-3">Customer <span class="grad-text">feedback</span></h3>
+        <div class="row g-4">
+          <div class="col-lg-4"><div class="glass p-4">
+            <div class="text-center mb-3"><div class="display-4 fw-bold" th:text="${sum.ratingCount > 0} ? ${#numbers.formatDecimal(sum.avgRating,1,1)} : '-'">-</div>
+              <div class="text-white-50 small" th:text="${sum.ratingCount} + ' reviews overall'"></div></div>
+            <div class="d-flex align-items-center gap-2 mb-2"><span class="small" style="width:34px">5 ★</span><div class="ad-bar star flex-grow-1"><span th:style="'width:' + ${sum.ratingPct[4]} + '%'"></span></div><span class="small text-white-50" style="width:28px" th:text="${sum.ratingDist[4]}"></span></div>
+            <div class="d-flex align-items-center gap-2 mb-2"><span class="small" style="width:34px">4 ★</span><div class="ad-bar star flex-grow-1"><span th:style="'width:' + ${sum.ratingPct[3]} + '%'"></span></div><span class="small text-white-50" style="width:28px" th:text="${sum.ratingDist[3]}"></span></div>
+            <div class="d-flex align-items-center gap-2 mb-2"><span class="small" style="width:34px">3 ★</span><div class="ad-bar star flex-grow-1"><span th:style="'width:' + ${sum.ratingPct[2]} + '%'"></span></div><span class="small text-white-50" style="width:28px" th:text="${sum.ratingDist[2]}"></span></div>
+            <div class="d-flex align-items-center gap-2 mb-2"><span class="small" style="width:34px">2 ★</span><div class="ad-bar star flex-grow-1"><span th:style="'width:' + ${sum.ratingPct[1]} + '%'"></span></div><span class="small text-white-50" style="width:28px" th:text="${sum.ratingDist[1]}"></span></div>
+            <div class="d-flex align-items-center gap-2"><span class="small" style="width:34px">1 ★</span><div class="ad-bar star flex-grow-1"><span th:style="'width:' + ${sum.ratingPct[0]} + '%'"></span></div><span class="small text-white-50" style="width:28px" th:text="${sum.ratingDist[0]}"></span></div>
+          </div></div>
+          <div class="col-lg-8"><div class="glass p-2 table-responsive"><table class="table table-hover sortable mb-0">
+            <thead><tr><th>Event</th><th>Organizer</th><th>Customer</th><th>Rating</th><th>Comment</th><th>Date</th></tr></thead>
+            <tbody><tr th:each="f : ${feedbacks}"><td th:text="${f.event.title}"></td><td th:text="${f.event.organizer.companyName} ?: ${f.event.organizer.email}"></td><td th:text="${f.booking.attendeeName} ?: ${f.customer.email}"></td>
+              <td class="ad-star" th:text="${#strings.repeat('★', f.rating)}" th:data-sort="${f.rating}"></td><td class="small" th:text="${f.comment}"></td>
+              <td class="small" th:text="${#temporals.format(f.createdAt,'dd MMM yyyy')}"></td></tr>
+              <tr th:if="${#lists.isEmpty(feedbacks)}"><td colspan="6" class="text-center text-white-50 py-4">No feedback yet.</td></tr></tbody></table></div></div>
+        </div>
+      </div>
+
+      <!-- ============ ISSUES / COMPLAINTS ============ -->
+      <div class="tab-pane fade" id="t-complaints">
+        <h3 class="mb-3">Issues &amp; <span class="grad-text">complaints</span></h3>
+        <div class="ad-chips d-flex gap-2 flex-wrap mb-3" data-rows="#complaintList .cmp">
+          <span class="chip on" data-filter="">All</span><span class="chip" data-filter="OPEN">Open</span><span class="chip" data-filter="RESOLVED">Resolved</span></div>
+        <div id="complaintList">
+          <div class="glass p-3 mb-3 cmp" th:each="c : ${complaints}" th:attr="data-state=(${c.resolved} ? 'RESOLVED' : 'OPEN')">
+            <div class="d-flex justify-content-between flex-wrap gap-2"><div class="d-flex align-items-center gap-3"><span class="ad-avatar" th:text="${#strings.toUpperCase(#strings.substring(c.user.email,0,1))}">U</span>
+              <div><strong th:text="${c.subject}"></strong><div class="small text-white-50" th:text="${c.user.email} + ' · ' + ${#temporals.format(c.createdAt,'dd MMM yyyy HH:mm')}"></div></div></div>
+              <span class="badge st align-self-start" th:classappend="${c.resolved} ? 'st-RESOLVED' : 'st-OPEN'" th:text="${c.resolved} ? 'RESOLVED' : 'OPEN'"></span></div>
+            <p class="mb-2 mt-3" th:text="${c.message}"></p>
+            <div class="small text-info" th:if="${c.resolved}" th:text="'Response: ' + ${c.adminResponse}"></div>
+            <form th:unless="${c.resolved}" th:action="@{/admin/complaints/{id}/resolve(id=${c.id})}" method="post" class="d-flex gap-2">
+              <input class="form-control" name="response" placeholder="Write a response..." required maxlength="900"><button class="btn btn-eventora btn-sm">Resolve</button></form>
+          </div>
+        </div>
+        <div class="glass p-4 text-center text-white-50" th:if="${#lists.isEmpty(complaints)}">No complaints - everyone is happy 😊</div>
+      </div>
+
+      <!-- ============ NOTIFICATIONS ============ -->
+      <div class="tab-pane fade" id="t-notifications">
+        <div class="d-flex justify-content-between align-items-center mb-3"><h3 class="mb-0">Notifications</h3>
+          <form th:action="@{/admin/notifications/read}" method="post"><button class="btn btn-glass btn-sm">Mark all read</button></form></div>
+        <div class="glass p-2"><a th:each="n : ${notifications}" th:href="${n.link} ?: '#'" class="d-flex gap-3 p-3 text-decoration-none text-white border-bottom border-secondary-subtle">
+          <i class="bi fs-4" th:classappend="${n.seen} ? 'bi-bell text-white-50' : 'bi-bell-fill text-warning'"></i>
+          <div><div th:text="${n.message}" th:classappend="${!n.seen} ? 'fw-semibold'"></div><small class="text-white-50" th:text="${#temporals.format(n.createdAt,'dd MMM HH:mm')}"></small></div></a>
+          <div class="p-4 text-center text-white-50" th:if="${#lists.isEmpty(notifications)}">No notifications.</div></div>
+      </div>
+
+    </div>
+  </main>
+</div></div></div>
+
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+  const PCT = /*[[${pct}]]*/ 10;
+  const P = ['#8b5cf6','#ec4899','#f97316','#22d3ee','#3b82f6','#fde047','#34d399','#f43f5e'];
+  Chart.defaults.color = '#b9b3d8'; Chart.defaults.borderColor = 'rgba(255,255,255,.08)';
+
+  // revenue + profit (last 14 days)
+  const dLabels = /*[[${daily.labels}]]*/ [], dVals = (/*[[${daily.values}]]*/ []).map(Number);
+  const g = document.getElementById('cDaily').getContext('2d'); const gr = g.createLinearGradient(0,0,0,300); gr.addColorStop(0,'rgba(139,92,246,.7)'); gr.addColorStop(1,'rgba(236,72,153,0)');
+  new Chart(g,{type:'line',data:{labels:dLabels,datasets:[
+    {label:'Revenue',data:dVals,borderColor:'#a78bfa',backgroundColor:gr,fill:true,tension:.4},
+    {label:'Eventora profit',data:dVals.map(v=>Math.round(v*PCT/100)),borderColor:'#34d399',borderDash:[6,4],tension:.4,fill:false}]},options:{plugins:{legend:{display:true}}}});
+  new Chart(document.getElementById('cRole'),{type:'doughnut',data:{labels:/*[[${byRole.labels}]]*/[],datasets:[{data:/*[[${byRole.values}]]*/[],backgroundColor:P,borderWidth:0}]},options:{cutout:'65%'}});
+  new Chart(document.getElementById('cCat'),{type:'bar',data:{labels:/*[[${byCategory.labels}]]*/[],datasets:[{data:/*[[${byCategory.values}]]*/[],backgroundColor:P,borderRadius:8}]},options:{plugins:{legend:{display:false}}}});
+  new Chart(document.getElementById('cStatus'),{type:'polarArea',data:{labels:/*[[${byStatus.labels}]]*/[],datasets:[{data:/*[[${byStatus.values}]]*/[],backgroundColor:P.map(c=>c+'cc'),borderWidth:0}]}});
+
+  // monthly sales vs profit
+  const mVals = (/*[[${monthly.values}]]*/ []).map(Number);
+  new Chart(document.getElementById('cMonthly'),{type:'bar',data:{labels:/*[[${monthly.labels}]]*/[],datasets:[
+    {label:'Gross sales',data:mVals,backgroundColor:'#8b5cf6',borderRadius:8},
+    {label:'Eventora profit',data:mVals.map(v=>Math.round(v*PCT/100)),backgroundColor:'#34d399',borderRadius:8}]},options:{plugins:{legend:{display:true}}}});
+
+  // "needs attention" cards jump to their tab
+  document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
+    const t = document.querySelector('[data-tab="' + b.dataset.go + '"]');
+    if (t) { bootstrap.Tab.getOrCreateInstance(t).show(); window.scrollTo({top:0,behavior:'smooth'}); }
+  }));
+
+  // filter chips (status / role) for tables and lists
+  document.querySelectorAll('.ad-chips').forEach(bar => {
+    const chips = bar.querySelectorAll('.chip');
+    chips.forEach(c => c.addEventListener('click', () => {
+      chips.forEach(x => x.classList.remove('on')); c.classList.add('on');
+      const f = c.dataset.filter;
+      document.querySelectorAll(bar.dataset.rows).forEach(r => r.style.display = (!f || r.dataset.state === f) ? '' : 'none');
+    }));
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Discover Events. Create Memories.')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav(false)}"></nav>
+
+<header class="hero">
+  <div class="poster"></div>
+  <!-- Put a licensed party/concert video at static/videos/hero.mp4 (e.g. from pexels.com/videos). If missing, the animated poster is used. -->
+  <video autoplay muted loop playsinline preload="auto" poster="/images/hero-poster.jpg">
+    <source th:src="@{/videos/hero.mp4}" type="video/mp4">
+  </video>
+  <div class="shade"></div>
+  <div class="beams"><div class="beam b1"></div><div class="beam b2"></div><div class="beam b3"></div><div class="beam b4"></div></div>
+  <canvas id="confetti"></canvas>
+  <i class="bi bi-triangle float f1 fs-2"></i><i class="bi bi-circle-fill float f2 fs-4"></i>
+  <i class="bi bi-triangle float f3 fs-1"></i><i class="bi bi-star-fill float f4 fs-3"></i>
+
+  <div class="container hero-content">
+    <span class="chip mb-4"><i class="bi bi-music-note-beamed"></i> Concerts · DJ Parties · Festivals · Conferences</span>
+    <h1>Discover Events.<br><span class="grad-text">Create Memories.</span></h1>
+    <p class="sub">Find amazing events, book your tickets, and experience unforgettable moments.</p>
+    <a th:href="@{/login}" class="btn btn-eventora btn-hero text-uppercase">Get Started</a>
+  </div>
+  <a href="#featured" class="scroll-down"><i class="bi bi-chevron-double-down"></i></a>
+</header>
+
+<section class="block pb-0">
+  <div class="container">
+    <div class="row g-3 text-center">
+      <div class="col-6 col-md-3"><div class="glass stat"><div class="n grad-text" th:text="${eventCount}">0</div>Live events</div></div>
+      <div class="col-6 col-md-3"><div class="glass stat"><div class="n grad-text2" th:text="${userCount}">0</div>Members</div></div>
+      <div class="col-6 col-md-3"><div class="glass stat"><div class="n grad-text">8</div>Categories</div></div>
+      <div class="col-6 col-md-3"><div class="glass stat"><div class="n grad-text2">QR</div>Instant tickets</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="featured">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+      <div><h2 class="sec-title">Trending <span class="grad-text">events</span></h2><p class="text-white-50 mb-0">Hand-picked experiences happening soon.</p></div>
+      <a th:href="@{/events}" class="btn btn-glass">View all events <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="mb-4 d-flex flex-wrap gap-2">
+      <a class="chip" th:each="c : ${categories}" th:href="@{/events(category=${c})}" th:text="${c.label}">Cat</a>
+    </div>
+    <div class="row g-4">
+      <div class="col-sm-6 col-lg-4" th:each="e : ${featured}"><div th:replace="~{fragments :: eventCard(${e})}"></div></div>
+      <div class="col-12" th:if="${#lists.isEmpty(featured)}"><div class="glass p-5 text-center">No events yet - check back soon!</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="how">
+  <div class="container">
+    <h2 class="sec-title text-center mb-5">From event to <span class="grad-text">entry</span> in minutes</h2>
+    <div class="row g-4">
+      <div class="col-md-3 step"><div class="glass p-4 h-100"><div class="ico"><i class="bi bi-envelope-check"></i></div><h5>1. Sign in with email</h5><p class="text-white-50 mb-0">Enter your email, confirm the one-time code. No passwords to remember.</p></div></div>
+      <div class="col-md-3 step"><div class="glass p-4 h-100"><div class="ico"><i class="bi bi-search-heart"></i></div><h5>2. Discover & request</h5><p class="text-white-50 mb-0">Search by category, date, city or price and pick your tickets.</p></div></div>
+      <div class="col-md-3 step"><div class="glass p-4 h-100"><div class="ico"><i class="bi bi-credit-card-2-front"></i></div><h5>3. Pay securely</h5><p class="text-white-50 mb-0">Once approved, pay within the window - seats are held for you.</p></div></div>
+      <div class="col-md-3 step"><div class="glass p-4 h-100"><div class="ico"><i class="bi bi-qr-code-scan"></i></div><h5>4. Scan & enjoy</h5><p class="text-white-50 mb-0">Download your QR ticket as PDF and walk right in.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="block pt-0">
+  <div class="container">
+    <div class="glass p-5 text-center" style="background:linear-gradient(135deg,#8b5cf655,#ec489944,#f9731633)">
+      <h2 class="sec-title">Hosting an event?</h2>
+      <p class="text-white-50 mb-4">Create events, approve requests, scan tickets at the door and watch your revenue grow.</p>
+      <a th:href="@{/register/organizer}" class="btn btn-eventora btn-lg">Become an organizer</a>
+    </div>
+  </div>
+</section>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('My Eventora')}"></head>
+<body>
+<nav th:replace="~{fragments :: dashnav}"></nav>
+<div class="dash"><div class="container-fluid px-4"><div class="row g-4">
+
+  <aside class="col-lg-2"><div class="glass side">
+    <div class="nav flex-column nav-pills" role="tablist">
+      <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#t-overview" data-tab="overview"><i class="bi bi-speedometer2"></i>Overview</button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-discover" data-tab="discover"><i class="bi bi-compass"></i>Discover Events</button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-bookings" data-tab="bookings"><i class="bi bi-journal-check"></i>My Bookings</button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-tickets" data-tab="tickets"><i class="bi bi-ticket-perforated"></i>My Tickets</button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-upcoming" data-tab="upcoming"><i class="bi bi-calendar-heart"></i>Upcoming Events</button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-payments" data-tab="payments"><i class="bi bi-credit-card"></i>Payments</button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-notifications" data-tab="notifications"><i class="bi bi-bell"></i>Notifications
+        <span class="badge bg-danger rounded-pill" th:if="${unread != null and unread > 0}" th:text="${unread}"></span></button>
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-support" data-tab="support"><i class="bi bi-life-preserver"></i>Support</button>
+    </div>
+  </div></aside>
+
+  <main class="col-lg-10">
+    <div th:replace="~{fragments :: flash}"></div>
+    <div class="tab-content">
+
+      <!-- OVERVIEW -->
+      <div class="tab-pane fade show active" id="t-overview">
+        <h2 class="mb-1">Hi, <span class="grad-text" th:text="${me.displayName}"></span> 👋</h2>
+        <p class="text-white-50">Here's what's happening with your events.</p>
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-xl-3"><div class="glass kpi k1"><div class="text-white-50">Bookings</div><div class="v" th:text="${#lists.size(bookings)}">0</div></div></div>
+          <div class="col-6 col-xl-3"><div class="glass kpi k2"><div class="text-white-50">Upcoming events</div><div class="v" th:text="${#lists.size(upcoming)}">0</div></div></div>
+          <div class="col-6 col-xl-3"><div class="glass kpi k3"><div class="text-white-50">Ticketed bookings</div><div class="v" th:text="${#maps.size(ticketsByBooking)}">0</div></div></div>
+          <div class="col-6 col-xl-3"><div class="glass kpi k4"><div class="text-white-50">Unread alerts</div><div class="v" th:text="${unread ?: 0}">0</div></div></div>
+        </div>
+        <div class="glass p-4 text-center" th:if="${#lists.isEmpty(bookings)}">
+          <h4>No bookings yet</h4><p class="text-white-50">Discover something amazing.</p><a th:href="@{/events}" class="btn btn-eventora">Browse events</a>
+        </div>
+        <div th:unless="${#lists.isEmpty(upcoming)}">
+          <h5 class="mb-3">Next up</h5>
+          <div class="row g-3"><div class="col-md-6 col-xl-4" th:each="b, i : ${upcoming}" th:if="${i.index < 3}">
+            <div class="glass ev-card"><div class="thumb" th:classappend="'cat-' + ${b.event.category}"><img th:src="${b.event.imagePath}" onerror="this.style.display='none'" alt=""></div>
+              <div class="p-3"><h6 th:text="${b.event.title}"></h6><div class="ev-meta" th:text="${#temporals.format(b.event.eventDate,'EEE dd MMM')} + ' · ' + ${b.event.venue}"></div></div></div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- DISCOVER -->
+      <div class="tab-pane fade" id="t-discover">
+        <h3 class="mb-3">Discover approved events</h3>
+        <form method="get" th:action="@{/customer#discover}" class="glass p-3 mb-4"><div class="row g-2">
+          <div class="col-lg-3"><input class="form-control" name="q" th:value="${q}" placeholder="Search events or venues"></div>
+          <div class="col-lg-2"><select class="form-select" name="category"><option value="">All categories</option><option th:each="c : ${categories}" th:value="${c}" th:text="${c.label}" th:selected="${cat == c}"></option></select></div>
+          <div class="col-lg-2"><input class="form-control" name="city" th:value="${city}" placeholder="Location"></div>
+          <div class="col-6 col-lg-2"><input type="date" class="form-control" name="from" th:value="${from}"></div>
+          <div class="col-6 col-lg-2"><input type="date" class="form-control" name="to" th:value="${to}"></div>
+          <div class="col-6 col-lg-2"><input type="number" min="0" class="form-control" name="minPrice" th:value="${minPrice}" placeholder="Min price"></div>
+          <div class="col-6 col-lg-2"><input type="number" min="0" class="form-control" name="maxPrice" th:value="${maxPrice}" placeholder="Max price"></div>
+          <div class="col-lg-3 d-flex gap-2"><button class="btn btn-eventora flex-grow-1"><i class="bi bi-search"></i> Search</button><a class="btn btn-glass" th:href="@{/customer#discover}">Reset</a></div>
+        </div></form>
+        <div class="row g-4"><div class="col-md-6 col-xl-4" th:each="e : ${discover}"><div th:replace="~{fragments :: eventCard(${e})}"></div></div></div>
+        <div class="glass p-4 text-center text-white-50" th:if="${#lists.isEmpty(discover)}">No approved events match your search.</div>
+      </div>
+
+      <!-- BOOKINGS -->
+      <div class="tab-pane fade" id="t-bookings">
+        <div class="d-flex justify-content-between align-items-center mb-3"><h3 class="mb-0">My Bookings</h3>
+          <input class="form-control w-auto table-filter" data-target="#bk" placeholder="Search..."></div>
+        <div class="glass p-2 table-responsive"><table class="table table-hover sortable mb-0" id="bk">
+          <thead><tr><th>Event</th><th>Ref</th><th>Tickets</th><th>Total</th><th>Status</th><th>Booked</th><th></th></tr></thead>
+          <tbody>
+            <tr th:each="b : ${bookings}">
+              <td><div class="d-flex align-items-center gap-2"><img class="mini-thumb" th:src="${b.event.imagePath}" onerror="this.className='thumb-fallback';this.removeAttribute('src')" alt="">
+                <div><a th:href="@{/events/{id}(id=${b.event.id})}" class="fw-semibold text-decoration-none" th:text="${b.event.title}"></a><div class="small text-white-50" th:text="${#temporals.format(b.event.eventDate,'dd MMM yyyy')}"></div></div></div></td>
+              <td class="small" th:text="${b.reference}"></td>
+              <td th:text="${b.quantity} + ' × ' + ${b.tier.name}"></td>
+              <td th:text="${currency} + ' ' + ${#numbers.formatDecimal(b.total,1,'COMMA',0,'POINT')}" th:data-sort="${b.total}"></td>
+              <td><span class="badge rounded-pill st" th:classappend="'st-' + ${b.status}" th:text="${#strings.replace(b.status,'_',' ')}"></span>
+                <div class="small text-white-50" th:if="${b.organizerNote}" th:text="${b.organizerNote}"></div></td>
+              <td class="small" th:text="${#temporals.format(b.createdAt,'dd MMM HH:mm')}" th:data-sort="${b.id}"></td>
+              <td class="text-end text-nowrap">
+                <a th:if="${b.status.name() == 'AWAITING_PAYMENT'}" th:href="@{/customer/pay/{id}(id=${b.id})}" class="btn btn-eventora btn-sm">Pay now</a>
+                <a th:if="${b.status.name() == 'PAID' and b.ticketsIssued}" th:href="@{/tickets/{id}/pdf(id=${b.id})}" class="btn btn-cyan btn-sm"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+                <span th:if="${b.status.name() == 'PAID' and !b.ticketsIssued}" class="small text-warning">Awaiting ticket from organizer</span>
+                <form th:if="${b.status.name() == 'REQUESTED' or b.status.name() == 'AWAITING_PAYMENT'}" th:action="@{/customer/bookings/{id}/cancel(id=${b.id})}" method="post" class="d-inline" onsubmit="return confirm('Cancel this booking?')"><button class="btn btn-glass btn-sm">Cancel</button></form>
+                <button th:if="${b.status.name() == 'PAID' and !b.event.past}" class="btn btn-glass btn-sm" data-bs-toggle="modal" th:data-bs-target="'#rf' + ${b.id}">Refund</button>
+                <button th:if="${b.status.name() == 'PAID' and b.ticketsIssued and !feedbackIds.contains(b.id)}" class="btn btn-glass btn-sm" data-bs-toggle="modal" th:data-bs-target="'#fb' + ${b.id}"><i class="bi bi-star"></i> Feedback</button>
+              </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(bookings)}"><td colspan="7" class="text-center text-white-50 py-4">Nothing here yet.</td></tr>
+          </tbody></table></div>
+        <!-- feedback modals -->
+        <div class="modal fade" th:each="b : ${bookings}" th:if="${b.status.name() == 'PAID' and b.ticketsIssued}" th:id="'fb' + ${b.id}" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content glass">
+          <form th:action="@{/customer/bookings/{id}/feedback(id=${b.id})}" method="post">
+            <div class="modal-header border-0"><h5>Feedback · <span th:text="${b.event.title}"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body"><label>Rating</label><select class="form-select mb-3" name="rating"><option value="5">★★★★★ Excellent</option><option value="4">★★★★ Good</option><option value="3">★★★ Okay</option><option value="2">★★ Poor</option><option value="1">★ Terrible</option></select>
+              <label>Your feedback for the organizer</label><textarea class="form-control" name="comment" rows="3" maxlength="1000" required></textarea></div>
+            <div class="modal-footer border-0"><button class="btn btn-eventora">Send feedback</button></div></form></div></div></div>
+        <!-- refund modals -->
+        <div class="modal fade" th:each="b : ${bookings}" th:if="${b.status.name() == 'PAID'}" th:id="'rf' + ${b.id}" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content glass">
+          <form th:action="@{/customer/bookings/{id}/refund(id=${b.id})}" method="post">
+            <div class="modal-header border-0"><h5>Request refund · <span th:text="${b.reference}"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body"><label>Reason</label><textarea class="form-control" name="reason" rows="3" maxlength="400" required></textarea></div>
+            <div class="modal-footer border-0"><button class="btn btn-eventora">Send request</button></div>
+          </form></div></div></div>
+      </div>
+
+      <!-- TICKETS -->
+      <div class="tab-pane fade" id="t-tickets">
+        <h3 class="mb-3">My Tickets</h3>
+        <div class="alert alert-warning" th:each="a : ${awaiting}"><i class="bi bi-hourglass-split me-1"></i>Paid for <strong th:text="${a.event.title}"></strong> - the organizer is preparing your ticket(s). You'll be notified and emailed when they are issued.</div>
+        <div class="glass p-4 text-center text-white-50" th:if="${#lists.isEmpty(paidBookings)}">Your QR tickets appear here once the organizer issues them after payment.</div>
+        <div th:each="b : ${paidBookings}" class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0" th:text="${b.event.title}"></h5>
+            <div class="d-flex gap-2"><a th:href="@{/tickets/{id}/view(id=${b.id})}" class="btn btn-eventora btn-sm"><i class="bi bi-ticket-detailed"></i> Open ticket</a>
+              <a th:href="@{/tickets/{id}/pdf(id=${b.id})}" class="btn btn-cyan btn-sm"><i class="bi bi-download"></i> Download PDF</a></div>
+          </div>
+          <div class="row g-4"><div class="col-xxl-6" th:each="t, i : ${ticketsByBooking.get(b.id)}">
+            <div th:replace="~{fragments :: ticketCard(${t}, ${b}, ${i.count})}"></div>
+            <div class="small mt-2 ps-2"><a th:href="@{/verify(code=${t.code})}"><i class="bi bi-patch-check"></i> Verify this ticket</a></div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- UPCOMING -->
+      <div class="tab-pane fade" id="t-upcoming">
+        <h3 class="mb-3">Upcoming Events</h3>
+        <div class="row g-4">
+          <div class="col-md-6 col-xl-4" th:each="b : ${upcoming}"><div class="glass ev-card">
+            <div class="thumb" th:classappend="'cat-' + ${b.event.category}"><img th:src="${b.event.imagePath}" onerror="this.style.display='none'" alt=""><span class="tag" th:text="${b.event.category.label}"></span></div>
+            <div class="p-3"><h5 th:text="${b.event.title}"></h5>
+              <div class="ev-meta"><i class="bi bi-calendar-event me-2 text-warning"></i><span th:text="${#temporals.format(b.event.eventDate,'EEE, dd MMM yyyy')} + ' · ' + ${#temporals.format(b.event.eventTime,'hh:mm a')}"></span></div>
+              <div class="ev-meta"><i class="bi bi-geo-alt me-2 text-info"></i><span th:text="${b.event.venue} + ', ' + ${b.event.city}"></span></div>
+              <div class="mt-2 small">🎟 <span th:text="${b.quantity} + ' × ' + ${b.tier.name}"></span></div></div></div></div>
+        </div>
+        <div class="glass p-4 text-center text-white-50" th:if="${#lists.isEmpty(upcoming)}">No upcoming events. <a th:href="@{/events}">Find one!</a></div>
+      </div>
+
+      <!-- PAYMENTS -->
+      <div class="tab-pane fade" id="t-payments">
+        <h3 class="mb-3">Payments</h3>
+        <div class="glass p-2 table-responsive"><table class="table table-hover sortable mb-0">
+          <thead><tr><th>Date</th><th>Event</th><th>Method</th><th>Reference</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr th:each="p : ${payments}">
+              <td class="small" th:text="${#temporals.format(p.createdAt,'dd MMM yyyy HH:mm')}" th:data-sort="${p.id}"></td>
+              <td th:text="${p.booking.event.title}"></td><td class="small" th:text="${p.method}"></td><td class="small" th:text="${p.gatewayRef}"></td>
+              <td th:text="${currency} + ' ' + ${#numbers.formatDecimal(p.amount,1,'COMMA',0,'POINT')}" th:data-sort="${p.amount}"></td>
+              <td><span class="badge rounded-pill st" th:classappend="'st-' + ${p.status}" th:text="${p.status}"></span><div class="small text-danger" th:text="${p.failureReason}"></div></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(payments)}"><td colspan="6" class="text-center text-white-50 py-4">No payments yet.</td></tr>
+          </tbody></table></div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="tab-pane fade" id="t-notifications">
+        <div class="d-flex justify-content-between align-items-center mb-3"><h3 class="mb-0">Notifications</h3>
+          <form th:action="@{/customer/notifications/read}" method="post"><button class="btn btn-glass btn-sm">Mark all read</button></form></div>
+        <div class="glass p-2">
+          <a th:each="n : ${notifications}" th:href="${n.link} ?: '#'" class="d-flex gap-3 p-3 text-decoration-none text-white border-bottom border-secondary-subtle">
+            <i class="bi fs-4" th:classappend="${n.seen} ? 'bi-bell text-white-50' : 'bi-bell-fill text-warning'"></i>
+            <div><div th:text="${n.message}" th:classappend="${!n.seen} ? 'fw-semibold'"></div><small class="text-white-50" th:text="${#temporals.format(n.createdAt,'dd MMM HH:mm')}"></small></div>
+          </a>
+          <div class="p-4 text-center text-white-50" th:if="${#lists.isEmpty(notifications)}">You're all caught up.</div>
+        </div>
+      </div>
+
+      <!-- SUPPORT -->
+      <div class="tab-pane fade" id="t-support">
+        <h3 class="mb-3">Support & complaints</h3>
+        <div class="row g-4"><div class="col-lg-6"><div class="glass p-4">
+          <form th:action="@{/customer/complaints}" method="post">
+            <div class="mb-3"><label>Subject</label><input class="form-control" name="subject" maxlength="150" required></div>
+            <div class="mb-3"><label>Message</label><textarea class="form-control" name="message" rows="4" maxlength="2000" required></textarea></div>
+            <button class="btn btn-eventora">Send to admin</button></form></div></div>
+          <div class="col-lg-6"><div class="glass p-4"><h6>Your complaints</h6>
+            <div th:each="c : ${complaints}" class="border-bottom border-secondary-subtle py-2">
+              <div class="d-flex justify-content-between"><strong th:text="${c.subject}"></strong><span class="badge st" th:classappend="${c.resolved} ? 'st-RESOLVED' : 'st-OPEN'" th:text="${c.resolved} ? 'RESOLVED' : 'OPEN'"></span></div>
+              <div class="small text-white-50" th:text="${c.message}"></div><div class="small text-info" th:if="${c.adminResponse}" th:text="'Admin: ' + ${c.adminResponse}"></div></div>
+            <div class="text-white-50" th:if="${#lists.isEmpty(complaints)}">None yet.</div>
+            <h6 class="mt-4">Your feedback</h6><div th:each="f : ${myFeedback}" class="border-bottom border-secondary-subtle py-2"><strong th:text="${f.event.title}"></strong> <span class="text-warning" th:text="${#strings.repeat('★', f.rating)}"></span><div class="small text-white-50" th:text="${f.comment}"></div></div><div class="text-white-50" th:if="${#lists.isEmpty(myFeedback)}">None yet.</div></div></div></div>
+      </div>
+    </div>
+  </main>
+</div></div></div>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

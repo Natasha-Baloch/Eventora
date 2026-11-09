@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Organizer registration')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav(true)}"></nav>
+<main class="auth-wrap"><div class="glass auth-card" style="max-width:620px">
+  <a th:href="@{/login/organizer}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to organizer sign in</a>
+  <div class="text-center my-3"><h2>Register as an <span class="grad-text">organizer</span></h2>
+    <p class="text-white-50">An event manager verifies every organizer before they can publish events.</p></div>
+  <div th:replace="~{fragments :: flash}"></div>
+  <form th:action="@{/register/organizer}" method="post">
+    <div class="row g-3">
+      <div class="col-md-6"><label>Your full name</label><input class="form-control" name="fullName" maxlength="100" required></div>
+      <div class="col-md-6"><label>Company / organization</label><input class="form-control" name="companyName" maxlength="120" required></div>
+      <div class="col-md-6"><label>Email</label><input type="email" class="form-control" name="email" maxlength="150" required></div>
+      <div class="col-md-6"><label>Phone</label><input class="form-control" name="phone" placeholder="+92 300 1234567" maxlength="20" required></div>
+      <div class="col-md-6"><label>Password</label><input type="password" class="form-control" name="password" minlength="8" maxlength="72" required autocomplete="new-password"></div>
+      <div class="col-md-6"><label>Confirm password</label><input type="password" class="form-control" name="confirm" minlength="8" maxlength="72" required autocomplete="new-password"></div>
+      <div class="col-12"><label>About your events / experience</label><textarea class="form-control" rows="3" name="orgBio" maxlength="1000" required></textarea></div>
+      <div class="col-12 small text-white-50">Password: 8+ characters with upper-case, lower-case and a number. It is stored securely (BCrypt hash).</div>
+      <div class="col-12"><button class="btn btn-cyan w-100 py-3">Create organizer account</button></div>
+    </div>
+  </form>
+</div></main>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

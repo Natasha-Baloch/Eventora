@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Payment')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav(true)}"></nav>
+<main class="auth-wrap"><div class="container" style="max-width:1000px;position:relative"><div class="row g-4">
+  <div class="col-md-5"><div class="glass p-4 h-100">
+    <h5 class="mb-3">Order summary</h5>
+    <div class="thumb mb-3 rounded-4" th:classappend="'cat-' + ${booking.event.category}"><img th:src="${booking.event.imagePath}" onerror="this.style.display='none'" alt=""></div>
+    <h5 th:text="${booking.event.title}"></h5>
+    <div class="ev-meta" th:text="${#temporals.format(booking.event.eventDate,'EEE, dd MMM yyyy')} + ' · ' + ${booking.event.venue}"></div>
+    <div class="ev-meta">Organizer: <strong th:text="${booking.event.organizer.companyName}"></strong></div>
+    <hr>
+    <div class="small text-white-50">Attendee</div><div th:text="${booking.attendeeName} + ' · ' + ${booking.attendeePhone}"></div>
+    <hr>
+    <div class="d-flex justify-content-between"><span th:text="${booking.quantity} + ' × ' + ${booking.tier.name}"></span><span th:text="${currency} + ' ' + ${#numbers.formatDecimal(booking.tier.price,1,'COMMA',0,'POINT')}"></span></div>
+    <div class="d-flex justify-content-between fs-4 fw-bold mt-2"><span>Total</span><span class="grad-text" th:text="${currency} + ' ' + ${#numbers.formatDecimal(booking.total,1,'COMMA',0,'POINT')}"></span></div>
+    <div class="glass glass-sm p-3 mt-3 text-center">Seats held for<div class="countdown grad-text2" id="countdown" th:data-end="${#temporals.format(booking.expiresAt,'yyyy-MM-dd''T''HH:mm:ss')}">--:--</div></div>
+  </div></div>
+
+  <div class="col-md-7"><div class="glass p-4">
+    <h4 class="mb-3"><i class="bi bi-wallet2 me-2"></i>Choose payment method</h4>
+    <div th:replace="~{fragments :: flash}"></div>
+    <ul class="nav nav-pills mb-3 gap-2" role="tablist">
+      <li class="nav-item"><button class="nav-link active btn-glass" data-bs-toggle="pill" data-bs-target="#pm-card" data-m="CARD"><i class="bi bi-credit-card"></i> Card</button></li>
+      <li class="nav-item"><button class="nav-link btn-glass" data-bs-toggle="pill" data-bs-target="#pm-ep" data-m="EASYPAISA"><i class="bi bi-phone"></i> Easypaisa</button></li>
+      <li class="nav-item"><button class="nav-link btn-glass" data-bs-toggle="pill" data-bs-target="#pm-jc" data-m="JAZZCASH"><i class="bi bi-phone-fill"></i> JazzCash</button></li>
+      <li class="nav-item"><button class="nav-link btn-glass" data-bs-toggle="pill" data-bs-target="#pm-bank" data-m="BANK"><i class="bi bi-bank"></i> Bank account</button></li>
+    </ul>
+    <style>.nav-pills .nav-link.active{background:var(--grad)!important;color:#fff}.nav-pills .nav-link{color:#fff;border-radius:999px}</style>
+    <div class="tab-content">
+      <!-- CARD -->
+      <div class="tab-pane fade show active" id="pm-card">
+        <form th:action="@{/customer/pay/{id}(id=${booking.id})}" method="post" autocomplete="off">
+          <input type="hidden" name="method" value="CARD">
+          <div class="mb-3"><label>Name on card</label><input class="form-control" name="holder" required maxlength="80"></div>
+          <div class="mb-3"><label>Card number</label><input class="form-control" name="cardNumber" inputmode="numeric" maxlength="23" placeholder="4242 4242 4242 4242" required></div>
+          <div class="row g-3 mb-3"><div class="col-6"><label>Expiry (MM/YY)</label><input class="form-control" name="expiry" placeholder="12/29" maxlength="5" required></div>
+            <div class="col-6"><label>CVV</label><input class="form-control" name="cvv" inputmode="numeric" maxlength="4" type="password" required></div></div>
+          <button class="btn btn-eventora w-100 py-3"><i class="bi bi-lock-fill me-1"></i>Pay <span th:text="${currency} + ' ' + ${#numbers.formatDecimal(booking.total,1,'COMMA',0,'POINT')}"></span></button>
+        </form>
+      </div>
+      <!-- EASYPAISA / JAZZCASH -->
+      <div class="tab-pane fade" id="pm-ep">
+        <form th:action="@{/customer/pay/{id}(id=${booking.id})}" method="post" autocomplete="off">
+          <input type="hidden" name="method" value="EASYPAISA">
+          <div class="mb-3"><label>Easypaisa account holder name</label><input class="form-control" name="holder" required maxlength="80"></div>
+          <div class="mb-3"><label>Easypaisa mobile number</label><input class="form-control" name="mobile" inputmode="tel" placeholder="0300 1234567" maxlength="16" required></div>
+          <div class="mb-3"><label>Wallet PIN / OTP</label><input class="form-control" name="pin" type="password" inputmode="numeric" maxlength="6" required></div>
+          <button class="btn btn-eventora w-100 py-3"><i class="bi bi-lock-fill me-1"></i>Pay with Easypaisa · <span th:text="${currency} + ' ' + ${#numbers.formatDecimal(booking.total,1,'COMMA',0,'POINT')}"></span></button>
+        </form>
+      </div>
+      <div class="tab-pane fade" id="pm-jc">
+        <form th:action="@{/customer/pay/{id}(id=${booking.id})}" method="post" autocomplete="off">
+          <input type="hidden" name="method" value="JAZZCASH">
+          <div class="mb-3"><label>JazzCash account holder name</label><input class="form-control" name="holder" required maxlength="80"></div>
+          <div class="mb-3"><label>JazzCash mobile number</label><input class="form-control" name="mobile" inputmode="tel" placeholder="0300 1234567" maxlength="16" required></div>
+          <div class="mb-3"><label>Wallet PIN / OTP</label><input class="form-control" name="pin" type="password" inputmode="numeric" maxlength="6" required></div>
+          <button class="btn btn-eventora w-100 py-3"><i class="bi bi-lock-fill me-1"></i>Pay with JazzCash · <span th:text="${currency} + ' ' + ${#numbers.formatDecimal(booking.total,1,'COMMA',0,'POINT')}"></span></button>
+        </form>
+      </div>
+      <!-- BANK -->
+      <div class="tab-pane fade" id="pm-bank">
+        <form th:action="@{/customer/pay/{id}(id=${booking.id})}" method="post" autocomplete="off">
+          <input type="hidden" name="method" value="BANK">
+          <div class="mb-3"><label>Bank</label><select class="form-select" name="bankName" required>
+            <option value="">Select your bank</option>
+            <option>HBL</option><option>UBL</option><option>MCB Bank</option><option>Allied Bank</option><option>Bank Alfalah</option><option>Meezan Bank</option>
+            <option>Standard Chartered</option><option>Faysal Bank</option><option>Askari Bank</option><option>Bank Al Habib</option><option>Habib Metropolitan</option><option>Other</option></select></div>
+          <div class="mb-3"><label>Account title</label><input class="form-control" name="holder" required maxlength="80"></div>
+          <div class="mb-3"><label>Account number / IBAN</label><input class="form-control" name="accountNumber" placeholder="PK36SCBL0000001123456702" maxlength="34" required></div>
+          <button class="btn btn-eventora w-100 py-3"><i class="bi bi-lock-fill me-1"></i>Pay by bank · <span th:text="${currency} + ' ' + ${#numbers.formatDecimal(booking.total,1,'COMMA',0,'POINT')}"></span></button>
+        </form>
+      </div>
+    </div>
+    <p class="small text-white-50 mt-3 mb-0">Your payment and registration details are sent to the event organizer, and the event manager is notified. Card numbers, PINs and CVVs are never stored.
+      <br><strong>Sandbox mode (demo):</strong> any valid-looking details are approved - card <code>4242 4242 4242 4242</code>, mobile <code>0300 1234567</code>, IBAN <code>PK36SCBL0000001123456702</code>. A number ending <code>0002</code> is declined.</p>
+  </div></div>
+</div></div></main>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

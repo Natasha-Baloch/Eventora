@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Your tickets')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav(true)}"></nav>
+<canvas id="confetti" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1"></canvas>
+<main class="ticket-page"><div class="container" style="max-width:980px;position:relative;z-index:2">
+  <div class="text-center mb-4">
+    <h1>You're going to <span class="grad-text" th:text="${booking.event.title}">the event</span>! 🎉</h1>
+    <p class="text-white-50">Show a QR code at the entrance. Each code works once.</p>
+    <div class="d-flex justify-content-center gap-2 flex-wrap no-print">
+      <a th:href="@{/tickets/{id}/pdf(id=${booking.id})}" class="btn btn-eventora"><i class="bi bi-download me-1"></i>Download PDF</a>
+      <button class="btn btn-glass" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print</button>
+      <a th:href="@{/dashboard}" class="btn btn-glass"><i class="bi bi-arrow-left me-1"></i>Back to dashboard</a>
+    </div>
+  </div>
+  <div class="mb-4" th:each="t, i : ${tickets}">
+    <div th:replace="~{fragments :: ticketCard(${t}, ${booking}, ${i.count})}"></div>
+    <div class="text-center small mt-2 no-print"><a th:href="@{/verify(code=${t.code})}"><i class="bi bi-patch-check"></i> Verify this ticket</a></div>
+  </div>
+</div></main>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

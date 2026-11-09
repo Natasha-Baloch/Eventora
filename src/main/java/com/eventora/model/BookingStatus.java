@@ -1,0 +1,3 @@
+package com.eventora.model;
+
+public enum BookingStatus { REQUESTED, AWAITING_PAYMENT, PAID, REJECTED, EXPIRED, CANCELLED, REFUND_REQUESTED, REFUNDED }

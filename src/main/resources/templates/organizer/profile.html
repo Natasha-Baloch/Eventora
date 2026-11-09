@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Organizer profile')}"></head>
+<body>
+<nav th:replace="~{fragments :: dashnav}"></nav>
+<div class="dash"><div class="container" style="max-width:720px">
+  <a th:href="@{/organizer}" class="text-decoration-none small"><i class="bi bi-arrow-left"></i> Back</a>
+  <h2 class="my-3">Organizer <span class="grad-text">verification</span></h2>
+  <div th:replace="~{fragments :: flash}"></div>
+  <div class="glass p-4">
+    <p>Status: <span class="badge rounded-pill st" th:classappend="'st-' + ${user.organizerStatus}" th:text="${user.organizerStatus}"></span></p>
+    <p class="text-white-50 small">Tell us about your business. An admin reviews your details before you can publish events.</p>
+    <form th:action="@{/organizer/profile}" method="post">
+      <div class="mb-3"><label>Your full name</label><input class="form-control" name="fullName" th:value="${user.fullName}" maxlength="100" required></div>
+      <div class="mb-3"><label>Company / organization</label><input class="form-control" name="companyName" th:value="${user.companyName}" maxlength="120" required></div>
+      <div class="mb-3"><label>Phone</label><input class="form-control" name="phone" th:value="${user.phone}" maxlength="20" placeholder="+92 300 1234567" required></div>
+      <div class="mb-3"><label>About your events / experience</label><textarea class="form-control" rows="4" name="orgBio" maxlength="1000" th:text="${user.orgBio}" required></textarea></div>
+      <button class="btn btn-eventora px-4">Save & submit for verification</button>
+    </form>
+  </div>
+</div></div>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

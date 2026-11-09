@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Verify code')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav(true)}"></nav>
+<main class="auth-wrap">
+  <div class="glass auth-card text-center">
+    <div class="fs-1 grad-text"><i class="bi bi-envelope-paper-heart"></i></div>
+    <h3 class="mt-2">Check your email</h3>
+    <p class="text-white-50">We sent a 6-digit code to<br><strong class="text-white" th:text="${email}"></strong></p>
+    <div th:replace="~{fragments :: flash}"></div>
+    <form th:action="@{/login/verify}" method="post">
+      <input class="form-control form-control-lg otp-input mb-3" name="code" inputmode="numeric" pattern="\d{6}" maxlength="6" placeholder="······" autocomplete="one-time-code" required autofocus>
+      <button class="btn btn-eventora w-100 py-3">Verify & sign in</button>
+    </form>
+    <div class="d-flex justify-content-between mt-3 small">
+      <form th:action="@{/login/resend}" method="post" class="m-0"><button class="btn btn-link p-0">Resend code</button></form>
+      <a th:href="@{/login/customer}">Use a different email</a>
+    </div>
+    <p class="small text-white-50 mt-3 mb-0">Code expires in 10 minutes · max 5 attempts.<br>Running locally without email set up? The code is printed in the VS Code terminal.</p>
+  </div>
+</main>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

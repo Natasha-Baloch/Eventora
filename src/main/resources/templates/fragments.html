@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+  <title th:text="${title} + ' · Eventora'">Eventora</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/eventora.css}">
+</head>
+<body>
+
+<!-- Public + logged-in top navigation -->
+<nav th:fragment="nav(solid)" class="ev-nav" th:classappend="${solid} ? 'solid'">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="brand" th:href="@{/}"><span class="logo"><i class="bi bi-stars"></i></span>Eventora</a>
+    <div class="d-none d-md-block">
+      <a class="nl" th:href="@{/}">Home</a>
+      <a class="nl" th:href="@{/events}">Events</a>
+      <a class="nl" th:href="@{/#how}">How it works</a>
+      <a class="nl" th:href="@{/verify}">Verify ticket</a>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <th:block th:if="${me == null}">
+        <a class="btn btn-eventora btn-sm px-4" th:href="@{/login}">Sign in</a>
+      </th:block>
+      <th:block th:if="${me != null}">
+        <a class="btn btn-glass btn-sm position-relative" th:href="@{/dashboard}"><i class="bi bi-grid-fill me-1"></i>Dashboard
+          <span th:if="${unread != null and unread > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" th:text="${unread}">1</span></a>
+        <form th:action="@{/logout}" method="post" class="m-0"><button class="btn btn-glass btn-sm" title="Sign out"><i class="bi bi-box-arrow-right"></i></button></form>
+      </th:block>
+    </div>
+  </div>
+</nav>
+
+<!-- Flash messages -->
+<div th:fragment="flash">
+  <div class="alert alert-success d-flex gap-2 align-items-center" th:if="${success}"><i class="bi bi-check-circle-fill"></i><span th:text="${success}"></span></div>
+  <div class="alert alert-danger d-flex gap-2 align-items-center" th:if="${error}"><i class="bi bi-exclamation-triangle-fill"></i><span th:text="${error}"></span></div>
+  <div class="alert alert-info d-flex gap-2 align-items-center" th:if="${info}"><i class="bi bi-info-circle-fill"></i><span th:text="${info}"></span></div>
+</div>
+
+<!-- Event card -->
+<div th:fragment="eventCard(e)" class="glass ev-card">
+  <a th:href="@{/events/{id}(id=${e.id})}" class="text-decoration-none text-white d-flex flex-column h-100">
+    <div class="thumb" th:classappend="'cat-' + ${e.category}">
+      <img th:src="${e.imagePath}" th:alt="${e.title}" loading="lazy" onerror="this.style.display='none'">
+      <span class="tag" th:text="${e.category.label}">Concert</span>
+      <span class="price">from <span th:text="${currency} + ' ' + ${#numbers.formatDecimal(e.minPrice,1,'COMMA',0,'POINT')}"></span></span>
+    </div>
+    <div class="p-3 d-flex flex-column flex-grow-1">
+      <h5 class="mb-2" th:text="${e.title}">Title</h5>
+      <div class="ev-meta mb-1"><i class="bi bi-calendar-event me-2 text-warning"></i><span th:text="${#temporals.format(e.eventDate,'EEE, dd MMM yyyy')} + ' · ' + ${#temporals.format(e.eventTime,'hh:mm a')}"></span></div>
+      <div class="ev-meta"><i class="bi bi-geo-alt me-2 text-info"></i><span th:text="${e.venue} + ', ' + ${e.city}"></span></div>
+      <div class="mt-auto pt-3 d-flex justify-content-between align-items-center">
+        <small class="ev-meta" th:text="${e.available} + ' tickets left'"></small>
+        <span class="btn btn-eventora btn-sm px-3">Book now</span>
+      </div>
+    </div>
+  </a>
+</div>
+
+<!-- Dashboard top bar -->
+<nav th:fragment="dashnav" class="ev-nav solid">
+  <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+    <a class="brand" th:href="@{/}"><span class="logo"><i class="bi bi-stars"></i></span>Eventora</a>
+    <div class="d-flex align-items-center gap-3">
+      <span class="d-none d-md-inline small text-white-50" th:if="${me != null}"><span th:text="${me.displayName}"></span> · <span class="badge st st-PUBLISHED" th:text="${me.role}"></span></span>
+      <a class="btn btn-glass btn-sm" th:href="@{/events}"><i class="bi bi-search me-1"></i>Browse</a>
+      <form th:action="@{/logout}" method="post" class="m-0"><button class="btn btn-glass btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Sign out</button></form>
+    </div>
+  </div>
+</nav>
+
+<!-- Colorful ticket -->
+<div th:fragment="ticketCard(t, b, n)" class="tk" th:classappend="${t.checkedIn} ? 'tk-used'" th:style="'--c1:' + ${b.event.category.c1} + ';--c2:' + ${b.event.category.c2} + ';--c3:' + ${b.event.category.c3}">
+  <div class="tk-main">
+    <div class="tk-banner" th:style="${b.event.imagePath != null} ? ('background-image:url(' + ${b.event.imagePath} + ')') : ''">
+      <span class="tk-brand"><i class="bi bi-stars"></i> EVENTORA</span>
+      <span class="tk-status" th:text="${t.checkedIn} ? 'USED' : 'VALID'">VALID</span>
+      <span class="tk-cat" th:text="${b.event.category.label}">Concert</span>
+      <h4 th:text="${b.event.title}">Event title</h4>
+    </div>
+    <div class="tk-body">
+      <div><small>Date</small><b th:text="${#temporals.format(b.event.eventDate,'EEE, dd MMM yyyy')}"></b></div>
+      <div><small>Time</small><b th:text="${#temporals.format(b.event.eventTime,'hh:mm a')}"></b></div>
+      <div class="wide"><small>Venue</small><b th:text="${b.event.venue} + ', ' + ${b.event.city}"></b></div>
+      <div><small>Ticket type</small><b th:text="${b.tier.name}"></b></div>
+      <div><small>Booking ref</small><b th:text="${b.reference}"></b></div>
+      <div><small>Attendee</small><b th:text="${b.attendeeName}"></b></div>
+      <div><small>Phone</small><b th:text="${b.attendeePhone}"></b></div>
+      <div class="wide"><small>Organizer</small><b th:text="${b.event.organizer.companyName}"></b></div>
+    </div>
+  </div>
+  <div class="tk-stub">
+    <div class="tk-admit">ADMIT ONE · <span th:text="${n}">1</span></div>
+    <div class="tk-qr"><img th:src="@{/tickets/qr/{c}.png(c=${t.code})}" alt="QR code"></div>
+    <div class="tk-code" th:text="${t.code}"></div>
+    <div class="tk-bars"></div>
+    <div class="tk-tier" th:text="${b.tier.name}">GENERAL</div>
+  </div>
+</div>
+
+<footer th:fragment="footer" class="ft">
+  <div class="container d-flex flex-wrap justify-content-between gap-2">
+    <div><strong class="grad-text">Eventora</strong> · Discover Events. Create Memories.</div>
+    <div>© <span th:text="${#temporals.year(#temporals.createNow())}">2026</span> Eventora</div>
+  </div>
+</footer>
+
+<th:block th:fragment="scripts">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:src="@{/js/eventora.js}"></script>
+</th:block>
+</body>
+</html>

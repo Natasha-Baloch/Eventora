@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Customer sign in')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav(true)}"></nav>
+<main class="auth-wrap"><div class="glass auth-card">
+  <a th:href="@{/login}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Choose another role</a>
+  <div class="text-center my-3">
+    <div class="fs-1 grad-text"><i class="bi bi-person-heart"></i></div>
+    <h2>Welcome, <span class="grad-text">customer!</span></h2>
+    <p class="text-white-50">Enter your email to get started.</p>
+  </div>
+  <div th:replace="~{fragments :: flash}"></div>
+  <form th:action="@{/login/email}" method="post">
+    <div class="mb-3"><label for="email">Email address</label>
+      <input type="email" class="form-control form-control-lg" id="email" name="email" placeholder="you@example.com" maxlength="150" required autofocus></div>
+    <button class="btn btn-eventora w-100 py-3"><span th:text="${otpRequired} ? 'Send me a code' : 'Continue'">Continue</span> <i class="bi bi-arrow-right"></i></button>
+  </form>
+  <p class="small text-white-50 text-center mt-4 mb-0" th:if="${otpRequired}"><i class="bi bi-shield-lock me-1"></i>We email you a 6-digit code - no password needed.</p>
+  <p class="small text-white-50 text-center mt-4 mb-0" th:unless="${otpRequired}"><i class="bi bi-person-plus me-1"></i>No password needed. New here? Your account is created automatically.</p>
+</div></main>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

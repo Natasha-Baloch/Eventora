@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Oops')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav(true)}"></nav>
+<main class="auth-wrap"><div class="glass auth-card text-center">
+  <div class="display-3 grad-text fw-bold" th:text="${status} ?: 'Oops'">404</div>
+  <p class="text-white-50">Something went wrong or you don't have access to this page.</p>
+  <a th:href="@{/}" class="btn btn-eventora">Back to home</a>
+  <div th:if="${@environment.getProperty('eventora.show-error-details','false') == 'true'}" class="glass glass-sm p-3 mt-4 text-start small" style="word-break:break-word">
+    <strong>Technical details (developer)</strong><br>
+    Page: <span th:text="${path}"></span><br>
+    Error: <span th:text="${exception}"></span><br>
+    Message: <span th:text="${message}"></span>
+  </div>
+</div></main>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>

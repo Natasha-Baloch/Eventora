@@ -1,0 +1,3 @@
+package com.eventora.model;
+
+public enum EventStatus { DRAFT, PENDING_APPROVAL, CHANGES_REQUESTED, REJECTED, APPROVED, PUBLISHED, SUSPENDED }

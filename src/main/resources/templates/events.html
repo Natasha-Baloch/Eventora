@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Browse events')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav(true)}"></nav>
+<section class="hero-sm"><div class="container">
+  <h1>Find your next <span class="grad-text">experience</span></h1>
+  <form method="get" th:action="@{/events}" class="glass p-3 mt-4">
+    <div class="row g-2">
+      <div class="col-lg-3"><input class="form-control" name="q" th:value="${q}" placeholder="Search events or venues"></div>
+      <div class="col-lg-2"><select class="form-select" name="category"><option value="">All categories</option>
+        <option th:each="c : ${categories}" th:value="${c}" th:text="${c.label}" th:selected="${cat == c}"></option></select></div>
+      <div class="col-lg-2"><input class="form-control" name="city" th:value="${city}" placeholder="City / location"></div>
+      <div class="col-6 col-lg-2"><input type="date" class="form-control" name="from" th:value="${from}" title="From date"></div>
+      <div class="col-6 col-lg-2"><input type="date" class="form-control" name="to" th:value="${to}" title="To date"></div>
+      <div class="col-6 col-lg-2"><input type="number" min="0" class="form-control" name="minPrice" th:value="${minPrice}" th:placeholder="'Min ' + ${currency}"></div>
+      <div class="col-6 col-lg-2"><input type="number" min="0" class="form-control" name="maxPrice" th:value="${maxPrice}" th:placeholder="'Max ' + ${currency}"></div>
+      <div class="col-lg-3 d-flex gap-2"><button class="btn btn-eventora flex-grow-1"><i class="bi bi-search me-1"></i>Search</button><a class="btn btn-glass" th:href="@{/events}">Reset</a></div>
+    </div>
+  </form>
+</div></section>
+<section class="pb-5"><div class="container">
+  <p class="text-white-50"><span th:text="${#lists.size(events)}">0</span> event(s) found</p>
+  <div class="row g-4">
+    <div class="col-sm-6 col-lg-4 col-xl-3" th:each="e : ${events}"><div th:replace="~{fragments :: eventCard(${e})}"></div></div>
+  </div>
+  <div class="glass p-5 text-center" th:if="${#lists.isEmpty(events)}"><i class="bi bi-emoji-frown fs-1"></i><h4 class="mt-2">No events match your search</h4><p class="text-white-50">Try different filters.</p></div>
+</div></section>
+<footer th:replace="~{fragments :: footer}"></footer>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>
